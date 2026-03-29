@@ -1,6 +1,6 @@
 # CLAUDE.md — blog.jcrlabs.net (Blog CMS)
 
-> Dominio: `blog.jcrlabs.net` | Namespace K8s: `blog`
+> Dominio: `tech-blog.jcrlabs.net` | Namespace K8s: `blog`
 
 ## Principio rector: SIMPLE
 
@@ -10,7 +10,7 @@ La solución más simple que funcione. Sin abstracciones prematuras.
 
 - **Backend**: NestJS 11 + MongoDB 8 + GraphQL
 - **Frontend**: Next.js 16 (SSG/ISR por post)
-- **Deploy**: `blog.jcrlabs.net`
+- **Deploy**: `tech-blog.jcrlabs.net`
 
 ## Tags disponibles
 

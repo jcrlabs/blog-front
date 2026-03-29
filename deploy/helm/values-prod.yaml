@@ -1,0 +1,10 @@
+replicaCount: 2
+image:
+  tag: v0.1.0
+ingress:
+  host: tech-blog.jcrlabs.net
+env:
+  API_URL: https://tech-blog-api.jcrlabs.net
+hpa:
+  minReplicas: 1
+  maxReplicas: 2

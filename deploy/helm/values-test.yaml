@@ -1,0 +1,10 @@
+replicaCount: 1
+image:
+  tag: develop-placeholder
+ingress:
+  host: tech-blog-test.jcrlabs.net
+env:
+  API_URL: https://tech-blog-api-test.jcrlabs.net
+hpa:
+  minReplicas: 1
+  maxReplicas: 1
