@@ -1,6 +1,4 @@
-import { gql } from "@apollo/client"
-
-export const GET_POSTS = gql`
+export const GET_POSTS = `
   query GetPosts($filter: PostFilterInput, $pagination: PaginationInput) {
     posts(filter: $filter, pagination: $pagination) {
       id
@@ -17,7 +15,7 @@ export const GET_POSTS = gql`
   }
 `
 
-export const GET_POST = gql`
+export const GET_POST = `
   query GetPost($slug: String!) {
     post(slug: $slug) {
       id
@@ -35,7 +33,7 @@ export const GET_POST = gql`
   }
 `
 
-export const GET_CATEGORIES = gql`
+export const GET_CATEGORIES = `
   query GetCategories {
     categories {
       id

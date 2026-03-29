@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getClient } from "@/lib/apollo"
+import { gqlFetch } from "@/lib/gql"
 import { GET_POST } from "@/lib/queries"
 import type { Post } from "@/lib/types"
 import { Nav } from "@/components/Nav"
@@ -15,10 +15,7 @@ interface Props {
 
 async function getPost(slug: string): Promise<Post | null> {
   try {
-    const { data } = await getClient().query({
-      query: GET_POST,
-      variables: { slug },
-    })
+    const data = await gqlFetch<{ post: Post | null }>(GET_POST, { slug }, 600)
     return data.post ?? null
   } catch {
     return null

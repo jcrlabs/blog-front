@@ -1,4 +1,4 @@
-import { getClient } from "@/lib/apollo"
+import { gqlFetch } from "@/lib/gql"
 import { GET_POSTS } from "@/lib/queries"
 import type { Post } from "@/lib/types"
 import { Nav } from "@/components/Nav"
@@ -10,10 +10,11 @@ export const revalidate = 300
 
 async function getPosts(): Promise<Post[]> {
   try {
-    const { data } = await getClient().query({
-      query: GET_POSTS,
-      variables: { pagination: { first: 24 } },
-    })
+    const data = await gqlFetch<{ posts: Post[] }>(
+      GET_POSTS,
+      { pagination: { first: 24 } },
+      300,
+    )
     return data.posts ?? []
   } catch {
     return []
