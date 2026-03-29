@@ -1,6 +1,6 @@
 replicaCount: 1
 image:
-  tag: develop-placeholder
+  tag: develop-e531c56
 ingress:
   host: tech-blog-test.jcrlabs.net
 env:
