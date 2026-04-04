@@ -5,7 +5,7 @@ export async function gqlFetch<T>(
   variables?: Record<string, unknown>,
   revalidate = 300,
 ): Promise<T> {
-  const res = await fetch(`${API}/api/graphql`, {
+  const res = await fetch(`${API}/graphql`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
