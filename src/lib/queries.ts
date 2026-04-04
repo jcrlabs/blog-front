@@ -22,6 +22,7 @@ export const GET_POST = `
       title
       slug
       summary
+      content
       status
       publishedAt
       sourceUrl

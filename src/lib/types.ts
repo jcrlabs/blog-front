@@ -3,7 +3,7 @@ export interface Post {
   title: string
   slug: string
   summary?: string
-  content?: Record<string, unknown>
+  content?: string
   status: string
   publishedAt?: string
   sourceUrl?: string

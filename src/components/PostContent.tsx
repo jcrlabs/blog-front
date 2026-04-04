@@ -3,14 +3,33 @@ import type { Post } from "@/lib/types"
 interface Props { post: Post }
 
 export function PostContent({ post }: Props) {
+  if (post.content) {
+    return (
+      <article className="prose-tech">
+        <div dangerouslySetInnerHTML={{ __html: post.content }} />
+        {post.sourceUrl && (
+          <p className="mt-8 pt-6 border-t border-[var(--border)] font-mono text-xs text-[var(--text-3)]">
+            Source:{' '}
+            <a
+              href={post.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#a78bfa] hover:underline"
+            >
+              {post.source}
+            </a>
+          </p>
+        )}
+      </article>
+    )
+  }
+
   if (post.sourceUrl) {
     return (
       <div className="text-center py-16">
         <div className="inline-block border border-[var(--border-2)] rounded-xl p-8 bg-[var(--surface)]">
           <p className="text-[var(--text-2)] font-mono text-sm mb-2">External article</p>
-          <p className="text-[var(--text-3)] text-xs mb-6 max-w-sm">
-            {post.summary}
-          </p>
+          <p className="text-[var(--text-3)] text-xs mb-6 max-w-sm">{post.summary}</p>
           <a
             href={post.sourceUrl}
             target="_blank"
@@ -27,13 +46,5 @@ export function PostContent({ post }: Props) {
     )
   }
 
-  if (!post.content) {
-    return <div className="prose-tech">{post.summary}</div>
-  }
-
-  return (
-    <article className="prose-tech">
-      <p className="text-[var(--text-2)]">{post.summary}</p>
-    </article>
-  )
+  return <div className="prose-tech">{post.summary}</div>
 }
