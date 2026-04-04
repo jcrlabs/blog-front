@@ -1,6 +1,6 @@
 replicaCount: 1
 image:
-  tag: develop-4ed9381
+  tag: develop-d3a5cd0
 ingress:
   host: tech-blog-test.jcrlabs.net
 env:
