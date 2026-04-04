@@ -14,3 +14,20 @@ export async function gqlFetch<T>(
   const { data } = await res.json()
   return data as T
 }
+
+export async function gqlAuth<T>(
+  query: string,
+  token: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`${API}/graphql`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ query, variables }),
+  })
+  const json = await res.json()
+  if (json.errors) throw new Error(json.errors[0].message)
+  return json.data as T
+}

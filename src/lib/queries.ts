@@ -42,3 +42,38 @@ export const GET_CATEGORIES = `
     }
   }
 `
+
+export const LOGIN = `
+  mutation Login($input: LoginInput!) {
+    login(input: $input) {
+      accessToken
+      refreshToken
+    }
+  }
+`
+
+export const GET_PENDING_POSTS = `
+  query PendingPosts {
+    pendingPosts {
+      id
+      title
+      summary
+      sourceUrl
+      source
+      tagNames
+      createdAt
+    }
+  }
+`
+
+export const APPROVE_POST = `
+  mutation ApprovePost($id: ID!) {
+    approvePost(id: $id) { id status }
+  }
+`
+
+export const REJECT_POST = `
+  mutation RejectPost($id: ID!) {
+    rejectPost(id: $id) { id status }
+  }
+`
