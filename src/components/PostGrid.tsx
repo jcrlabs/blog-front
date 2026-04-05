@@ -31,6 +31,7 @@ const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] =
   { key: "Prometheus Blog",label: "prometheus", match: (s) => s === "Prometheus Blog" },
   { key: "Cilium Blog",    label: "cilium",     match: (s) => s === "Cilium Blog" },
   { key: "Flux Blog",      label: "flux",       match: (s) => s === "Flux Blog" },
+  { key: "Medium",         label: "medium",     match: (s) => s.startsWith("Medium") },
 ]
 
 interface Props { onLoad?: (count: number) => void }
