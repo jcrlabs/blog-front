@@ -22,14 +22,23 @@ async function fetchPosts(): Promise<Post[]> {
   }
 }
 
-const SOURCES = ["all", "Kubernetes Blog", "CNCF Blog", "dev.to kubernetes", "Grafana Blog", "Cloudflare Blog"]
+const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] = [
+  { key: "all",            label: "all",        match: () => true },
+  { key: "dev.to",         label: "dev.to",     match: (s) => s.startsWith("dev.to") },
+  { key: "Kubernetes Blog",label: "kubernetes", match: (s) => s === "Kubernetes Blog" },
+  { key: "CNCF Blog",      label: "cncf",       match: (s) => s === "CNCF Blog" },
+  { key: "Grafana Blog",   label: "grafana",    match: (s) => s === "Grafana Blog" },
+  { key: "Prometheus Blog",label: "prometheus", match: (s) => s === "Prometheus Blog" },
+  { key: "Cilium Blog",    label: "cilium",     match: (s) => s === "Cilium Blog" },
+  { key: "Flux Blog",      label: "flux",       match: (s) => s === "Flux Blog" },
+]
 
 interface Props { onLoad?: (count: number) => void }
 
 export function PostGrid({ onLoad }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeSource, setActiveSource] = useState("all")
+  const [activeKey, setActiveKey] = useState("all")
   const [search, setSearch] = useState("")
   const ref = useRef<HTMLDivElement>(null)
   const visible = useInView(ref, { once: true, margin: "-40px" })
@@ -38,8 +47,9 @@ export function PostGrid({ onLoad }: Props) {
     fetchPosts().then((p) => { setPosts(p); setLoading(false); onLoad?.(p.length) })
   }, [onLoad])
 
+  const activeFilter = FILTERS.find((f) => f.key === activeKey) ?? FILTERS[0]
   const filtered = posts.filter((p) => {
-    if (activeSource !== "all" && p.source !== activeSource) return false
+    if (!activeFilter.match(p.source)) return false
     if (search && !p.title.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
@@ -63,17 +73,17 @@ export function PostGrid({ onLoad }: Props) {
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
-          {SOURCES.map((src) => (
+          {FILTERS.map((f) => (
             <button
-              key={src}
-              onClick={() => setActiveSource(src)}
+              key={f.key}
+              onClick={() => setActiveKey(f.key)}
               className={`px-3 py-1.5 rounded-md font-mono text-xs transition-all ${
-                activeSource === src
+                activeKey === f.key
                   ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[#a78bfa]"
                   : "bg-[var(--surface)] border border-[var(--border)] text-[var(--text-3)] hover:border-[var(--border-2)] hover:text-[var(--text-2)]"
               }`}
             >
-              {src === "all" ? "all" : src.split(" ")[0].toLowerCase()}
+              {f.label}
             </button>
           ))}
         </div>
