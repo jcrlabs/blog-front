@@ -77,3 +77,9 @@ export const REJECT_POST = `
     rejectPost(id: $id) { id status }
   }
 `
+
+export const APPROVE_ALL_POSTS = `
+  mutation ApproveAllPosts {
+    approveAllPosts
+  }
+`

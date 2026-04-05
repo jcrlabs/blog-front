@@ -1,4 +1,4 @@
-const API = process.env.API_URL ?? "https://tech-blog-api.jcrlabs.net"
+const API = process.env.API_URL ?? process.env.API_INTERNAL_URL ?? "https://tech-blog-api.jcrlabs.net"
 
 export async function gqlFetch<T>(
   query: string,

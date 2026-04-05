@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { gqlAuth } from "@/lib/gql"
-import { GET_PENDING_POSTS, APPROVE_POST, REJECT_POST } from "@/lib/queries"
+import { GET_PENDING_POSTS, APPROVE_POST, REJECT_POST, APPROVE_ALL_POSTS } from "@/lib/queries"
 
 interface PendingPost {
   id: string
@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [posts, setPosts] = useState<PendingPost[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
+  const [approvingAll, setApprovingAll] = useState(false)
 
   const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") ?? "" : ""
 
@@ -36,6 +37,14 @@ export default function AdminPage() {
   }, [token, router])
 
   useEffect(() => { loadPending() }, [loadPending])
+
+  async function approveAll() {
+    if (!confirm(`¿Aprobar todos los ${posts.length} posts pendientes?`)) return
+    setApprovingAll(true)
+    await gqlAuth(APPROVE_ALL_POSTS, token)
+    setPosts([])
+    setApprovingAll(false)
+  }
 
   async function approve(id: string) {
     setActing(id)
@@ -61,12 +70,23 @@ export default function AdminPage() {
         <h1 className="text-lg font-bold tracking-widest uppercase text-white/80">
           Moderación — {posts.length} pendientes
         </h1>
-        <button
-          onClick={() => { localStorage.removeItem("admin_token"); router.push("/admin/login") }}
-          className="text-xs text-white/30 hover:text-white/60"
-        >
-          Salir
-        </button>
+        <div className="flex gap-3 items-center">
+          {posts.length > 0 && (
+            <button
+              onClick={approveAll}
+              disabled={approvingAll}
+              className="px-3 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 rounded text-white font-medium"
+            >
+              {approvingAll ? "Aprobando..." : `Aprobar todos (${posts.length})`}
+            </button>
+          )}
+          <button
+            onClick={() => { localStorage.removeItem("admin_token"); router.push("/admin/login") }}
+            className="text-xs text-white/30 hover:text-white/60"
+          >
+            Salir
+          </button>
+        </div>
       </div>
 
       {posts.length === 0 ? (

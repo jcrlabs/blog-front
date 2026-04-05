@@ -6,7 +6,7 @@ import { Hero } from "@/components/Hero"
 import { PostGrid } from "@/components/PostGrid"
 import { Footer } from "@/components/Footer"
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 async function getPosts(): Promise<Post[]> {
   try {
