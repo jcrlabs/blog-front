@@ -24,7 +24,9 @@ async function fetchPosts(): Promise<Post[]> {
 
 const SOURCES = ["all", "Kubernetes Blog", "CNCF Blog", "dev.to kubernetes", "Grafana Blog", "Cloudflare Blog"]
 
-export function PostGrid() {
+interface Props { onLoad?: (count: number) => void }
+
+export function PostGrid({ onLoad }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSource, setActiveSource] = useState("all")
@@ -33,8 +35,8 @@ export function PostGrid() {
   const visible = useInView(ref, { once: true, margin: "-40px" })
 
   useEffect(() => {
-    fetchPosts().then((p) => { setPosts(p); setLoading(false) })
-  }, [])
+    fetchPosts().then((p) => { setPosts(p); setLoading(false); onLoad?.(p.length) })
+  }, [onLoad])
 
   const filtered = posts.filter((p) => {
     if (activeSource !== "all" && p.source !== activeSource) return false
