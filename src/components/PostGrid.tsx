@@ -49,7 +49,7 @@ export function PostGrid({ onLoad }: Props) {
 
   const activeFilter = FILTERS.find((f) => f.key === activeKey) ?? FILTERS[0]
   const filtered = posts.filter((p) => {
-    if (!activeFilter.match(p.source)) return false
+    if (!activeFilter.match(p.source ?? "")) return false
     if (search && !p.title.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
