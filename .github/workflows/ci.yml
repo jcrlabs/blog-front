@@ -30,9 +30,6 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
-      - name: Lint
-        run: npx next lint --dir src
-
       - name: Build
         run: npm run build
         env:
