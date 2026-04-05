@@ -5,15 +5,22 @@ export async function gqlFetch<T>(
   variables?: Record<string, unknown>,
   revalidate = 300,
 ): Promise<T> {
-  const res = await fetch(`${API}/graphql`, {
+  const fetchOptions: RequestInit = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
-    next: { revalidate },
-  })
+  }
+  if (revalidate === 0) {
+    fetchOptions.cache = "no-store"
+  } else {
+    fetchOptions.next = { revalidate } as NextFetchRequestConfig
+  }
+  const res = await fetch(`${API}/graphql`, fetchOptions)
   const { data } = await res.json()
   return data as T
 }
+
+type NextFetchRequestConfig = { revalidate?: number | false; tags?: string[] }
 
 export async function gqlAuth<T>(
   query: string,

@@ -13,7 +13,7 @@ async function getPosts(): Promise<Post[]> {
     const data = await gqlFetch<{ posts: Post[] }>(
       GET_POSTS,
       { pagination: { first: 500 } },
-      300,
+      0,
     )
     return data.posts ?? []
   } catch {
