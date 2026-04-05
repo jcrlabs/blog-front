@@ -10,9 +10,10 @@ export const revalidate = 300
 
 async function getPosts(): Promise<Post[]> {
   try {
+    const since = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     const data = await gqlFetch<{ posts: Post[] }>(
       GET_POSTS,
-      { pagination: { first: 24 } },
+      { filter: { since }, pagination: { first: 500 } },
       300,
     )
     return data.posts ?? []

@@ -38,7 +38,7 @@ export function PostCard({ post, index }: Props) {
     el.style.setProperty("--glow-y", `${e.clientY - rect.top}px`)
   }
 
-  const isExternal = !!post.sourceUrl
+  const isExternal = !post.content && !!post.sourceUrl
   const href = isExternal ? post.sourceUrl! : `/post/${post.slug}`
 
   return (
