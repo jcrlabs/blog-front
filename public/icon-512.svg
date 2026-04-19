@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#050507"/>
+  <text x="256" y="200" font-family="monospace" font-size="110" font-weight="bold" fill="#a78bfa" text-anchor="middle">JCR</text>
+  <text x="256" y="310" font-family="monospace" font-size="60" fill="#6d6d80" text-anchor="middle">LABS</text>
+  <rect x="106" y="340" width="300" height="6" rx="3" fill="#a78bfa" opacity="0.4"/>
+</svg>
