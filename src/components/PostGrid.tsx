@@ -22,16 +22,18 @@ async function fetchPosts(): Promise<Post[]> {
   }
 }
 
-const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] = [
-  { key: "all",            label: "all",        match: () => true },
-  { key: "dev.to",         label: "dev.to",     match: (s) => s.startsWith("dev.to") },
-  { key: "Kubernetes Blog",label: "kubernetes", match: (s) => s === "Kubernetes Blog" },
-  { key: "CNCF Blog",      label: "cncf",       match: (s) => s === "CNCF Blog" },
-  { key: "Grafana Blog",   label: "grafana",    match: (s) => s === "Grafana Blog" },
-  { key: "Prometheus Blog",label: "prometheus", match: (s) => s === "Prometheus Blog" },
-  { key: "Cilium Blog",    label: "cilium",     match: (s) => s === "Cilium Blog" },
-  { key: "Flux Blog",      label: "flux",       match: (s) => s === "Flux Blog" },
-  { key: "Medium",         label: "medium",     match: (s) => s.startsWith("Medium") },
+const RESEARCH_SOURCES = ["Anthropic Blog", "OpenAI Blog", "Google DeepMind", "Hugging Face Blog", "Sebastian Raschka", "Chip Huyen", "The Batch"]
+
+const FILTERS: { key: string; label: string; match: (s: string, tags: string[]) => boolean }[] = [
+  { key: "all",          label: "All",          match: () => true },
+  { key: "llm",          label: "LLMs",         match: (_, t) => t.some(x => ["llm","openai","anthropic","gemini","mistral","open-source"].includes(x)) },
+  { key: "mcp",          label: "MCP",          match: (_, t) => t.includes("mcp") },
+  { key: "agents",       label: "Agents",       match: (_, t) => t.includes("agents") },
+  { key: "rag",          label: "RAG",          match: (_, t) => t.includes("rag") || t.includes("vector-db") },
+  { key: "fine-tuning",  label: "Fine-tuning",  match: (_, t) => t.includes("fine-tuning") },
+  { key: "architecture", label: "Architecture", match: (_, t) => t.includes("architecture") || t.includes("mlops") },
+  { key: "prompting",    label: "Prompting",    match: (_, t) => t.includes("prompting") },
+  { key: "research",     label: "Research",     match: (s) => RESEARCH_SOURCES.includes(s) },
 ]
 
 interface Props { onLoad?: (count: number) => void }
@@ -50,39 +52,37 @@ export function PostGrid({ onLoad }: Props) {
 
   const activeFilter = FILTERS.find((f) => f.key === activeKey) ?? FILTERS[0]
   const filtered = posts.filter((p) => {
-    if (!activeFilter.match(p.source ?? "")) return false
+    if (!activeFilter.match(p.source ?? "", p.tagNames ?? [])) return false
     if (search && !p.title.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
 
   return (
-    <div ref={ref}>
+    <div ref={ref} className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={visible ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row gap-3 mb-8 pt-4"
+        className="flex flex-col sm:flex-row gap-3 mb-6 pt-2"
       >
-        <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] font-mono text-sm">$</span>
+        <div className="relative flex-1 min-w-[200px]">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-3)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input
             type="text"
-            placeholder="grep posts..."
+            placeholder="Search articles..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-7 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg font-mono text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+            className="search-input"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap items-center">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setActiveKey(f.key)}
-              className={`px-3 py-1.5 rounded-md font-mono text-xs transition-all ${
-                activeKey === f.key
-                  ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[#a78bfa]"
-                  : "bg-[var(--surface)] border border-[var(--border)] text-[var(--text-3)] hover:border-[var(--border-2)] hover:text-[var(--text-2)]"
-              }`}
+              className={`filter-btn ${activeKey === f.key ? "active" : ""}`}
             >
               {f.label}
             </button>
@@ -90,21 +90,28 @@ export function PostGrid({ onLoad }: Props) {
         </div>
       </motion.div>
 
-      <motion.p
+      <motion.div
         initial={{ opacity: 0 }}
         animate={visible ? { opacity: 1 } : {}}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="font-mono text-xs text-[var(--text-3)] mb-6"
+        className="flex items-center gap-2 mb-6"
       >
-        {loading
-          ? <span className="text-[var(--accent)]">loading...</span>
-          : <><span className="text-[var(--accent)]">→</span> {filtered.length} results{search && <span className="text-[var(--text-3)]"> for &quot;{search}&quot;</span>}</>
-        }
-      </motion.p>
+        {loading ? (
+          <div className="flex items-center gap-2 text-[var(--text-3)] text-sm">
+            <div className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+            Loading articles...
+          </div>
+        ) : (
+          <span className="text-sm text-[var(--text-3)]">
+            <span className="text-[var(--text-2)] font-medium">{filtered.length}</span> article{filtered.length !== 1 ? "s" : ""}
+            {search && <span> matching <span className="text-[var(--accent)]">&ldquo;{search}&rdquo;</span></span>}
+          </span>
+        )}
+      </motion.div>
 
       {!loading && filtered.length === 0 ? (
-        <div className="text-center py-24 text-[var(--text-3)] font-mono text-sm">
-          no posts found — try adjusting your filter
+        <div className="text-center py-24 text-[var(--text-3)] text-sm">
+          No articles found — try a different filter or search term.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
