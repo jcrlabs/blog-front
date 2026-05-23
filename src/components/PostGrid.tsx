@@ -84,95 +84,97 @@ export function PostGrid({ onLoad }: Props) {
     return true
   })
 
-  const statusMsg = loading
-    ? "Loading articles…"
-    : search
-      ? `${filtered.length} article${filtered.length !== 1 ? "s" : ""} matching "${search}"`
-      : `${filtered.length} article${filtered.length !== 1 ? "s" : ""}`
+  const [featured, ...rest] = filtered
+  const showFeatured = !search && activeKey === "all" && !loading && featured
 
   return (
     <div ref={ref} className="max-w-5xl mx-auto px-4 sm:px-6 pb-20">
 
-      {/* ── Search + Filters ── */}
+      {/* ── Toolbar: filters + search ── */}
       <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={visible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-6 space-y-3"
+        initial={{ opacity: 0 }}
+        animate={visible ? { opacity: 1 } : {}}
+        transition={{ duration: 0.3 }}
+        className="py-4"
+        style={{ borderBottom: "1px solid var(--border)" }}
       >
-        {/* Search */}
-        <div role="search" className="relative">
-          <label htmlFor={searchId} className="sr-only">Search articles</label>
-          <svg
-            aria-hidden="true"
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-            style={{ color: "var(--text-3)" }}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input
-            id={searchId}
-            type="search"
-            placeholder="Search articles…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="search-input"
-            aria-controls={statusId}
-            autoComplete="off"
-          />
-        </div>
-
-        {/* Filters */}
+        {/* Filter tabs */}
         <div
           role="group"
           aria-label="Filter articles by topic"
-          className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5"
+          className="flex gap-5 overflow-x-auto scrollbar-none mb-3"
+          style={{ borderBottom: "1px solid var(--border-2)" }}
         >
           {FILTERS.map(f => (
             <button
               key={f.key}
               onClick={() => setActiveKey(f.key)}
-              className={`filter-btn${activeKey === f.key ? " active" : ""}`}
+              className={`filter-tab${activeKey === f.key ? " active" : ""}`}
               aria-pressed={activeKey === f.key}
             >
               {f.label}
             </button>
           ))}
         </div>
+
+        {/* Search + count row */}
+        <div className="flex items-center gap-3">
+          <div role="search" className="relative flex-1 max-w-sm">
+            <label htmlFor={searchId} className="sr-only">Search articles</label>
+            <svg
+              aria-hidden="true"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+              style={{ color: "var(--text-3)" }}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              id={searchId}
+              type="search"
+              placeholder="Search articles…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="search-input"
+              aria-controls={statusId}
+              autoComplete="off"
+            />
+          </div>
+
+          {/* Live count */}
+          <div
+            id={statusId}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="text-sm flex-shrink-0"
+            style={{ color: "var(--text-3)" }}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
+                />
+                Loading…
+              </span>
+            ) : (
+              <span>
+                <span className="font-medium tabular-nums" style={{ color: "var(--text-2)" }}>
+                  {filtered.length}
+                </span>{" "}
+                article{filtered.length !== 1 ? "s" : ""}
+                {search && (
+                  <> matching <span style={{ color: "var(--accent)" }}>&ldquo;{search}&rdquo;</span></>
+                )}
+              </span>
+            )}
+          </div>
+        </div>
       </motion.div>
 
-      {/* ── Status / count ── */}
-      <div
-        id={statusId}
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="flex items-center gap-2 mb-5 h-5"
-      >
-        {loading ? (
-          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-3)" }}>
-            <div
-              aria-hidden="true"
-              className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
-            />
-            Loading…
-          </div>
-        ) : (
-          <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            <span className="font-medium" style={{ color: "var(--text-2)" }}>{filtered.length}</span>
-            {" "}article{filtered.length !== 1 ? "s" : ""}
-            {search && (
-              <span> matching <span style={{ color: "var(--accent)" }}>&ldquo;{search}&rdquo;</span></span>
-            )}
-          </span>
-        )}
-        {/* Visually hidden full status for screen readers */}
-        <span className="sr-only">{statusMsg}</span>
-      </div>
-
-      {/* ── Grid ── */}
+      {/* ── Content ── */}
       {!loading && filtered.length === 0 ? (
         <div
           role="status"
@@ -182,58 +184,71 @@ export function PostGrid({ onLoad }: Props) {
           No articles found — try a different filter or search term.
         </div>
       ) : (
-        <>
+        <div className="mt-6 space-y-6">
+
+          {/* Featured first article */}
+          {showFeatured && (
+            <div className="mb-2">
+              <PostCard post={featured} index={0} featured />
+            </div>
+          )}
+
+          {/* Grid */}
           <div
             className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
             aria-label="Articles"
           >
-            {filtered.map((post, i) => (
-              <PostCard key={post.id} post={post} index={i} />
-            ))}
-
-            {/* Skeleton placeholders while loading */}
+            {/* Skeletons while loading */}
             {loading && Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} aria-hidden="true" className="card" style={{ borderLeft: "3px solid var(--border-2)" }}>
-                <div className="px-4 pt-4 pb-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <div className="skeleton h-3 w-16" />
+              <div key={i} aria-hidden="true" className="card" style={{ minHeight: 200 }}>
+                <div className="px-5 pt-4 pb-3" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div className="skeleton h-3 w-20" />
                 </div>
-                <div className="px-4 py-3 space-y-2">
+                <div className="px-5 py-4 space-y-2">
                   <div className="skeleton h-4 w-full" />
-                  <div className="skeleton h-4 w-4/5" />
-                  <div className="skeleton h-4 w-2/3" />
-                  <div className="skeleton h-3 w-full mt-2" />
-                  <div className="skeleton h-3 w-3/4" />
+                  <div className="skeleton h-4 w-5/6" />
+                  <div className="skeleton h-3 w-full mt-3" />
+                  <div className="skeleton h-3 w-4/5" />
                 </div>
-                <div className="px-4 pb-4 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
-                  <div className="skeleton h-5 w-24" />
+                <div className="px-5 pb-4 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="skeleton h-5 w-20" />
                 </div>
               </div>
             ))}
+
+            {/* Actual cards — skip index 0 when featured is shown */}
+            {(showFeatured ? rest : filtered).map((post, i) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                index={showFeatured ? i + 1 : i}
+              />
+            ))}
           </div>
 
+          {/* Load more */}
           {hasMore && !search && activeKey === "all" && (
-            <div className="flex justify-center mt-10">
+            <div className="flex justify-center pt-6">
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
                 aria-label={loadingMore ? "Loading more articles" : "Load more articles"}
-                className="filter-btn px-8"
-                style={{ minHeight: "44px" }}
+                className="btn-outline"
               >
                 {loadingMore ? (
-                  <span className="flex items-center gap-2">
+                  <>
                     <span
                       aria-hidden="true"
-                      className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin"
+                      className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
                       style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
                     />
                     Loading…
-                  </span>
-                ) : "Load more"}
+                  </>
+                ) : "Load more articles"}
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   )

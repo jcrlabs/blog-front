@@ -16,15 +16,15 @@ function formatDate(iso: string): string {
 }
 
 function sourceLabel(source?: string): string {
-  if (!source) return "source"
+  if (!source) return "Unknown"
   const map: Record<string, string> = {
     "Anthropic Blog": "Anthropic",
     "OpenAI Blog": "OpenAI",
     "Google DeepMind": "DeepMind",
-    "Hugging Face Blog": "HuggingFace",
-    "Simon Willison": "simonw",
-    "Chip Huyen": "huyenchip",
-    "Sebastian Raschka": "raschka",
+    "Hugging Face Blog": "Hugging Face",
+    "Simon Willison": "Simon Willison",
+    "Chip Huyen": "Chip Huyen",
+    "Sebastian Raschka": "S. Raschka",
     "The Batch": "The Batch",
     "LangChain Blog": "LangChain",
     "LlamaIndex Blog": "LlamaIndex",
@@ -37,11 +37,11 @@ function sourceLabel(source?: string): string {
   if (map[source]) return map[source]
   if (source.startsWith("dev.to")) return "dev.to"
   if (source.startsWith("Medium")) return "Medium"
-  return source.split(" ")[0].slice(0, 12)
+  return source.split(" ")[0].slice(0, 14)
 }
 
 function sourceColor(source?: string): string {
-  if (!source) return "var(--accent)"
+  if (!source) return "#6366f1"
   if (source.includes("Anthropic")) return "#d4893a"
   if (source.includes("OpenAI")) return "#10a37f"
   if (source.includes("DeepMind") || source.includes("Google")) return "#4285f4"
@@ -51,10 +51,11 @@ function sourceColor(source?: string): string {
   if (source.startsWith("dev.to")) return "#08b6ae"
   if (source.includes("LangChain")) return "#1c7ed6"
   if (source.includes("LlamaIndex")) return "#9333ea"
-  if (source.includes("Simon") || source.includes("simonw")) return "#e879f9"
+  if (source.includes("Simon")) return "#e879f9"
   if (source.includes("Chip") || source.includes("huyen")) return "#f472b6"
   if (source.includes("Batch") || source.includes("deeplearning")) return "#60a5fa"
-  return "var(--accent)"
+  if (source.includes("Raschka")) return "#34d399"
+  return "#6366f1"
 }
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://tech-blog-api.jcrlabs.net"
@@ -69,9 +70,9 @@ async function toggleFavoriteApi(id: string): Promise<boolean> {
   return data?.toggleFavorite?.favorited ?? false
 }
 
-interface Props { post: Post; index: number }
+interface Props { post: Post; index: number; featured?: boolean }
 
-export function PostCard({ post, index }: Props) {
+export function PostCard({ post, index, featured = false }: Props) {
   const [favorited, setFavorited] = useState(post.favorited)
   const [saving, setSaving] = useState(false)
 
@@ -93,33 +94,34 @@ export function PostCard({ post, index }: Props) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: Math.min(index * 0.03, 0.3),
-        duration: 0.4,
-        ease: [0.16, 1, 0.3, 1],
-      }}
-      aria-label={`${post.title}, from ${label}, ${dateStr}`}
+      transition={{ delay: Math.min(index * 0.025, 0.25), duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="h-full"
+      aria-label={`${post.title}, from ${label}, ${dateStr}`}
     >
-      <div
-        className="card"
-        style={{ borderLeft: `3px solid ${color}` }}
-      >
+      <div className={`card ${featured ? "card-featured" : ""}`}>
+
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3"
+        <div className="flex items-center justify-between px-5 pt-4 pb-3"
           style={{ borderBottom: "1px solid var(--border)" }}>
-          <span
-            className="source-badge"
-            style={{ color }}
-            aria-label={`Source: ${label}`}
-          >
-            {label}
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="source-dot"
+              aria-hidden="true"
+              style={{ background: color }}
+            />
+            <span
+              className="text-xs font-semibold truncate"
+              style={{ color }}
+              aria-label={`Source: ${label}`}
+            >
+              {label}
+            </span>
+          </div>
           <time
             dateTime={post.publishedAt ?? post.createdAt}
-            className="text-xs tabular-nums"
+            className="text-xs tabular-nums flex-shrink-0 ml-3"
             style={{ color: "var(--text-3)" }}
           >
             {dateStr}
@@ -131,24 +133,23 @@ export function PostCard({ post, index }: Props) {
           href={href}
           target={isExternal ? "_blank" : "_self"}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          tabIndex={0}
-          className="block flex-1 px-4 py-3 group"
+          className="block flex-1 px-5 py-4 group"
           aria-label={isExternal ? `${post.title} — opens on ${label}` : post.title}
         >
           <h2
-            className="font-semibold leading-snug mb-2 line-clamp-3 transition-colors group-hover:text-white"
+            className={`font-bold leading-snug mb-2 transition-colors group-hover:text-[var(--accent)] ${featured ? "text-xl" : "text-base"} ${featured ? "line-clamp-3" : "line-clamp-2"}`}
             style={{
-              fontSize: "15px",
               color: "var(--text)",
               fontFamily: "var(--font-newsreader), Georgia, serif",
+              letterSpacing: "-0.01em",
             }}
           >
             {post.title}
           </h2>
           {post.summary && (
             <p
-              className="text-sm leading-relaxed line-clamp-2"
-              style={{ color: "var(--text-3)" }}
+              className={`text-sm leading-relaxed ${featured ? "line-clamp-3" : "line-clamp-2"}`}
+              style={{ color: "var(--text-2)" }}
             >
               {post.summary}
             </p>
@@ -157,38 +158,28 @@ export function PostCard({ post, index }: Props) {
 
         {/* ── Footer ── */}
         <div
-          className="flex items-center justify-between px-4 pb-4 pt-2"
+          className="flex items-center justify-between px-5 pb-4 pt-3"
           style={{ borderTop: "1px solid var(--border)" }}
         >
-          {/* Tags */}
           <div className="flex flex-wrap gap-1 min-w-0 mr-2" aria-label="Tags">
-            {post.tagNames.slice(0, 3).map((tag) => (
+            {post.tagNames.slice(0, featured ? 4 : 3).map(tag => (
               <span key={tag} className="tag">#{tag}</span>
             ))}
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               onClick={handleFavorite}
               disabled={saving}
               aria-label={favorited ? `Remove "${post.title}" from saved` : `Save "${post.title}"`}
               aria-pressed={favorited}
               className="icon-btn"
-              style={favorited ? { color: "#fbbf24" } : undefined}
+              style={favorited ? { color: "#f59e0b" } : undefined}
             >
-              <svg
-                aria-hidden="true"
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill={favorited ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth={1.75}
-              >
+              <svg aria-hidden="true" className="w-4 h-4" viewBox="0 0 24 24"
+                fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
               </svg>
             </button>
-
             {isExternal && (
               <a
                 href={href}
@@ -197,7 +188,8 @@ export function PostCard({ post, index }: Props) {
                 aria-label={`Open "${post.title}" on ${label} (opens in new tab)`}
                 className="icon-btn"
               >
-                <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
               </a>

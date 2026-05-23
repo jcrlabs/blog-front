@@ -8,70 +8,66 @@ const ease = [0.16, 1, 0.3, 1] as const
 
 export function Hero({ postCount }: Props) {
   return (
-    <header className="pt-10 pb-8 px-4 sm:px-6">
+    <header className="pt-12 pb-10 px-4 sm:px-6" style={{ borderBottom: "1px solid var(--border)" }}>
       <div className="max-w-5xl mx-auto">
-
-        {/* Live badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease }}
-        >
-          <div
-            role="status"
-            aria-label="Feed status: live, updated every 6 hours"
-            className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-widest uppercase"
-            style={{
-              border: "1px solid rgba(99,102,241,0.25)",
-              background: "rgba(99,102,241,0.08)",
-              color: "var(--accent)",
-            }}
-          >
-            <span
-              aria-hidden="true"
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ background: "var(--accent)" }}
-            />
-            Live · Updated every 6h
-          </div>
-        </motion.div>
-
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.07, ease }}
+          transition={{ duration: 0.5, ease }}
+          className="flex flex-col gap-4"
         >
-          <h1
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight mb-3"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
-          >
-            <span style={{ color: "var(--text)" }}>The AI Engineer </span>
-            <span className="gradient-text">Intelligence Feed</span>
-          </h1>
-        </motion.div>
-
-        {/* Description + count */}
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.14, ease }}
-          className="text-sm sm:text-base leading-relaxed max-w-2xl"
-          style={{ color: "var(--text-2)" }}
-        >
-          Curated insights on LLMs, MCP, agents, RAG and AI architecture — from Anthropic,
-          OpenAI, Hugging Face and the best independent researchers.
-          {postCount > 0 && (
-            <span
-              aria-label={`${postCount.toLocaleString()} articles available`}
-              className="ml-2 tabular-nums"
-              style={{ color: "var(--text-3)" }}
+          {/* Eyebrow */}
+          <div className="flex items-center gap-3">
+            <div
+              role="status"
+              aria-label="Feed updated every 6 hours"
+              className="flex items-center gap-1.5 text-[11px] font-semibold tracking-widest uppercase"
+              style={{ color: "var(--accent)" }}
             >
-              {postCount.toLocaleString()} articles
+              <span
+                aria-hidden="true"
+                className="inline-block w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: "var(--accent)" }}
+              />
+              Live
+            </div>
+            <span aria-hidden="true" style={{ color: "var(--border-2)" }}>·</span>
+            <span className="text-[11px] tracking-widest uppercase font-medium" style={{ color: "var(--text-3)" }}>
+              Updated every 6h
             </span>
-          )}
-        </motion.p>
+          </div>
 
+          {/* Headline */}
+          <h1
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-none"
+            style={{
+              fontFamily: "var(--font-newsreader), Georgia, serif",
+              color: "var(--text)",
+              letterSpacing: "-0.03em",
+            }}
+          >
+            The AI Engineer<br />
+            <em className="not-italic" style={{ color: "var(--accent)" }}>Intelligence Feed</em>
+          </h1>
+
+          {/* Description */}
+          <p
+            className="text-base leading-relaxed max-w-xl"
+            style={{ color: "var(--text-2)" }}
+          >
+            Curated insights on LLMs, MCP, agents, RAG and AI architecture — from Anthropic,
+            OpenAI, Hugging Face and the best independent researchers.
+            {postCount > 0 && (
+              <span
+                className="ml-2 tabular-nums text-sm"
+                style={{ color: "var(--text-3)" }}
+                aria-label={`${postCount.toLocaleString()} articles available`}
+              >
+                {postCount.toLocaleString()} articles.
+              </span>
+            )}
+          </p>
+        </motion.div>
       </div>
     </header>
   )
