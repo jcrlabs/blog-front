@@ -11,10 +11,12 @@ export function HomeClient() {
   return (
     <>
       <Hero postCount={postCount} />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="border-t border-[var(--border)] mb-6" />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div style={{ borderTop: "1px solid var(--border)", marginBottom: "1.5rem" }} />
       </div>
-      <PostGrid onLoad={handleLoad} />
+      <main id="main-content" tabIndex={-1}>
+        <PostGrid onLoad={handleLoad} />
+      </main>
     </>
   )
 }
