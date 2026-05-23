@@ -103,7 +103,7 @@ export function PostCard({ post, index, featured = false }: Props) {
       <div className={`card ${featured ? "card-featured" : ""}`}>
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3"
+        <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-5 sm:pt-4 sm:pb-3"
           style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="flex items-center gap-2 min-w-0">
             <span
@@ -133,7 +133,7 @@ export function PostCard({ post, index, featured = false }: Props) {
           href={href}
           target={isExternal ? "_blank" : "_self"}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          className="block flex-1 px-5 py-4 group"
+          className="block flex-1 px-3 py-3 sm:px-5 sm:py-4 group"
           aria-label={isExternal ? `${post.title} — opens on ${label}` : post.title}
         >
           <h2
@@ -158,7 +158,7 @@ export function PostCard({ post, index, featured = false }: Props) {
 
         {/* ── Footer ── */}
         <div
-          className="flex items-center justify-between px-5 pb-4 pt-3"
+          className="flex items-center justify-between px-3 pb-3 pt-2 sm:px-5 sm:pb-4 sm:pt-3"
           style={{ borderTop: "1px solid var(--border)" }}
         >
           <div className="flex flex-wrap gap-1 min-w-0 mr-2" aria-label="Tags">

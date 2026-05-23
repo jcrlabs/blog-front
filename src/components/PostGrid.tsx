@@ -84,8 +84,8 @@ export function PostGrid({ onLoad }: Props) {
     return true
   })
 
-  const [featured, ...rest] = filtered
-  const showFeatured = !search && activeKey === "all" && !loading && featured
+  const [featured] = filtered
+  const showFeatured = !search && activeKey === "all" && !loading && !!featured
 
   return (
     <div ref={ref} className="max-w-5xl mx-auto px-4 sm:px-6 pb-20">
@@ -186,9 +186,9 @@ export function PostGrid({ onLoad }: Props) {
       ) : (
         <div className="mt-6 space-y-6">
 
-          {/* Featured first article */}
+          {/* Featured first article — only on sm+ */}
           {showFeatured && (
-            <div className="mb-2">
+            <div className="hidden sm:block mb-2">
               <PostCard post={featured} index={0} featured />
             </div>
           )}
@@ -216,13 +216,11 @@ export function PostGrid({ onLoad }: Props) {
               </div>
             ))}
 
-            {/* Actual cards — skip index 0 when featured is shown */}
-            {(showFeatured ? rest : filtered).map((post, i) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                index={showFeatured ? i + 1 : i}
-              />
+            {/* On mobile show all cards; on sm+ skip first (shown as featured above) */}
+            {filtered.map((post, i) => (
+              <div key={post.id} className={showFeatured && i === 0 ? "sm:hidden" : ""}>
+                <PostCard post={post} index={i} />
+              </div>
             ))}
           </div>
 
