@@ -13,11 +13,15 @@ export function Nav() {
   }, [])
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-      scrolled
-        ? "border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-xl shadow-lg shadow-black/20"
-        : "border-b border-transparent bg-transparent"
-    }`}>
+    <nav
+      className="sticky top-0 z-50 transition-all duration-300"
+      style={{
+        borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
+        background: scrolled ? "rgba(9,9,15,0.92)" : "transparent",
+        backdropFilter: scrolled ? "blur(16px)" : "none",
+        boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,0.03)" : "none",
+      }}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[var(--accent)]/20">

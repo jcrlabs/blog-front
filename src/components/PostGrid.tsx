@@ -79,12 +79,13 @@ export function PostGrid({ onLoad }: Props) {
   return (
     <div ref={ref} className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={visible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row gap-3 mb-6 pt-2"
+        transition={{ duration: 0.35 }}
+        className="mb-6 space-y-3"
       >
-        <div className="relative flex-1 min-w-[200px]">
+        {/* Search */}
+        <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-3)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -96,7 +97,9 @@ export function PostGrid({ onLoad }: Props) {
             className="search-input"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap items-center">
+
+        {/* Filters — horizontal scroll on mobile */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
           {FILTERS.map((f) => (
             <button
               key={f.key}
@@ -109,25 +112,23 @@ export function PostGrid({ onLoad }: Props) {
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={visible ? { opacity: 1 } : {}}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="flex items-center gap-2 mb-6"
-      >
+      {/* Count */}
+      <div className="flex items-center gap-2 mb-5 h-5">
         {loading ? (
-          <div className="flex items-center gap-2 text-[var(--text-3)] text-sm">
+          <div className="flex items-center gap-2 text-[var(--text-3)] text-xs">
             <div className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-            Loading articles...
+            Loading...
           </div>
         ) : (
-          <span className="text-sm text-[var(--text-3)]">
-            <span className="text-[var(--text-2)] font-medium">{filtered.length}</span> article{filtered.length !== 1 ? "s" : ""}
+          <span className="text-xs text-[var(--text-3)]">
+            <span className="text-[var(--text-2)] font-medium">{filtered.length}</span>
+            {" "}article{filtered.length !== 1 ? "s" : ""}
             {search && <span> matching <span className="text-[var(--accent)]">&ldquo;{search}&rdquo;</span></span>}
           </span>
         )}
-      </motion.div>
+      </div>
 
+      {/* Grid */}
       {!loading && filtered.length === 0 ? (
         <div className="text-center py-24 text-[var(--text-3)] text-sm">
           No articles found — try a different filter or search term.
@@ -139,12 +140,13 @@ export function PostGrid({ onLoad }: Props) {
               <PostCard key={post.id} post={post} index={i} />
             ))}
           </div>
+
           {hasMore && !search && activeKey === "all" && (
             <div className="flex justify-center mt-10">
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="filter-btn px-6 py-2.5 text-sm"
+                className="filter-btn px-6 py-2"
               >
                 {loadingMore ? (
                   <span className="flex items-center gap-2">

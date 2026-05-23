@@ -11,7 +11,9 @@ export function HomeClient() {
   return (
     <>
       <Hero postCount={postCount} />
-      <div className="glow-line mb-8 max-w-6xl mx-auto px-4 sm:px-6" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="border-t border-[var(--border)] mb-6" />
+      </div>
       <PostGrid onLoad={handleLoad} />
     </>
   )
