@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import type { Post } from "@/lib/types"
 
@@ -47,9 +47,33 @@ function sourceColor(source?: string): string {
   return "var(--accent)"
 }
 
+const API = process.env.NEXT_PUBLIC_API_URL ?? "https://tech-blog-api.jcrlabs.net"
+
+async function toggleFavoriteApi(id: string): Promise<boolean> {
+  const res = await fetch(`${API}/graphql`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: `mutation { toggleFavorite(id: "${id}") { id favorited } }` }),
+  })
+  const { data } = await res.json()
+  return data?.toggleFavorite?.favorited ?? false
+}
+
 interface Props { post: Post; index: number }
 
 export function PostCard({ post, index }: Props) {
+  const [favorited, setFavorited] = useState(post.favorited)
+  const [saving, setSaving] = useState(false)
+
+  async function handleFavorite(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (saving) return
+    setSaving(true)
+    const next = await toggleFavoriteApi(post.id)
+    setFavorited(next)
+    setSaving(false)
+  }
   const cardRef = useRef<HTMLDivElement>(null)
 
   function onMouseMove(e: React.MouseEvent) {
@@ -118,11 +142,23 @@ export function PostCard({ post, index }: Props) {
               <span key={tag} className="tag text-[10.5px]">#{tag}</span>
             ))}
           </div>
-          {isExternal && (
-            <svg className="w-3.5 h-3.5 text-[var(--text-3)] flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          )}
+          <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+            <button
+              onClick={handleFavorite}
+              disabled={saving}
+              title={favorited ? "Remove from saved" : "Save article"}
+              className="p-1 rounded transition-colors hover:bg-[var(--surface-2)]"
+            >
+              <svg className={`w-3.5 h-3.5 transition-colors ${favorited ? "text-amber-400 fill-amber-400" : "text-[var(--text-3)]"}`} viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+              </svg>
+            </button>
+            {isExternal && (
+              <svg className="w-3.5 h-3.5 text-[var(--text-3)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            )}
+          </div>
         </div>
       </a>
     </motion.div>

@@ -11,6 +11,16 @@ export const GET_POSTS = `
       source
       tagNames
       createdAt
+      favorited
+    }
+  }
+`
+
+export const TOGGLE_FAVORITE = `
+  mutation ToggleFavorite($id: ID!) {
+    toggleFavorite(id: $id) {
+      id
+      favorited
     }
   }
 `

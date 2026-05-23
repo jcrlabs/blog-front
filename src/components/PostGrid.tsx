@@ -7,18 +7,24 @@ import { GET_POSTS } from "@/lib/queries"
 import type { Post } from "@/lib/types"
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://tech-blog-api.jcrlabs.net"
+const PAGE_SIZE = 24
 
-async function fetchPosts(): Promise<Post[]> {
+async function fetchPosts(after?: string): Promise<{ posts: Post[]; hasMore: boolean; cursor?: string }> {
   try {
     const res = await fetch(`${API}/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: GET_POSTS, variables: { pagination: { first: 500 } } }),
+      body: JSON.stringify({ query: GET_POSTS, variables: { pagination: { first: PAGE_SIZE + 1, ...(after ? { after } : {}) } } }),
     })
     const { data } = await res.json()
-    return data?.posts ?? []
+    const all: Post[] = data?.posts ?? []
+    const hasMore = all.length > PAGE_SIZE
+    const posts = hasMore ? all.slice(0, PAGE_SIZE) : all
+    const lastId = posts[posts.length - 1]?.id
+    const cursor = lastId ? Buffer.from(lastId).toString("base64") : undefined
+    return { posts, hasMore, cursor }
   } catch {
-    return []
+    return { posts: [], hasMore: false }
   }
 }
 
@@ -41,14 +47,27 @@ interface Props { onLoad?: (count: number) => void }
 export function PostGrid({ onLoad }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [cursor, setCursor] = useState<string | undefined>()
   const [activeKey, setActiveKey] = useState("all")
   const [search, setSearch] = useState("")
   const ref = useRef<HTMLDivElement>(null)
   const visible = useInView(ref, { once: true, margin: "-40px" })
 
   useEffect(() => {
-    fetchPosts().then((p) => { setPosts(p); setLoading(false); onLoad?.(p.length) })
+    fetchPosts().then(({ posts: p, hasMore: h, cursor: c }) => {
+      setPosts(p); setHasMore(h); setCursor(c); setLoading(false); onLoad?.(p.length)
+    })
   }, [onLoad])
+
+  async function loadMore() {
+    if (!cursor || loadingMore) return
+    setLoadingMore(true)
+    const { posts: more, hasMore: h, cursor: c } = await fetchPosts(cursor)
+    setPosts((prev) => [...prev, ...more])
+    setHasMore(h); setCursor(c); setLoadingMore(false)
+  }
 
   const activeFilter = FILTERS.find((f) => f.key === activeKey) ?? FILTERS[0]
   const filtered = posts.filter((p) => {
@@ -114,11 +133,29 @@ export function PostGrid({ onLoad }: Props) {
           No articles found — try a different filter or search term.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((post, i) => (
-            <PostCard key={post.id} post={post} index={i} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map((post, i) => (
+              <PostCard key={post.id} post={post} index={i} />
+            ))}
+          </div>
+          {hasMore && !search && activeKey === "all" && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="filter-btn px-6 py-2.5 text-sm"
+              >
+                {loadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+                    Loading...
+                  </span>
+                ) : "Load more"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

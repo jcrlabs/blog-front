@@ -10,6 +10,7 @@ export interface Post {
   source?: string
   tagNames: string[]
   createdAt: string
+  favorited: boolean
 }
 
 export interface Category {
