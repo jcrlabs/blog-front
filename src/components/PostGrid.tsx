@@ -103,7 +103,7 @@ export function PostGrid({ onLoad }: Props) {
           role="group"
           aria-label="Filter articles by topic"
           className="flex gap-5 overflow-x-auto scrollbar-none mb-3"
-          style={{ borderBottom: "1px solid var(--border-2)" }}
+          style={{ borderBottom: "1px solid var(--border)" }}
         >
           {FILTERS.map(f => (
             <button
@@ -123,7 +123,7 @@ export function PostGrid({ onLoad }: Props) {
             <label htmlFor={searchId} className="sr-only">Search articles</label>
             <svg
               aria-hidden="true"
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
               style={{ color: "var(--text-3)" }}
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
             >
@@ -147,8 +147,13 @@ export function PostGrid({ onLoad }: Props) {
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            className="text-sm flex-shrink-0"
-            style={{ color: "var(--text-3)" }}
+            className="text-xs flex-shrink-0"
+            style={{
+              color: "var(--text-3)",
+              fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -161,12 +166,12 @@ export function PostGrid({ onLoad }: Props) {
               </span>
             ) : (
               <span>
-                <span className="font-medium tabular-nums" style={{ color: "var(--text-2)" }}>
+                <span className="tabular-nums" style={{ color: "var(--text-2)" }}>
                   {filtered.length}
                 </span>{" "}
-                article{filtered.length !== 1 ? "s" : ""}
+                art{filtered.length !== 1 ? "s" : ""}
                 {search && (
-                  <> matching <span style={{ color: "var(--accent)" }}>&ldquo;{search}&rdquo;</span></>
+                  <> · <span style={{ color: "var(--accent)" }}>&ldquo;{search}&rdquo;</span></>
                 )}
               </span>
             )}
@@ -184,49 +189,45 @@ export function PostGrid({ onLoad }: Props) {
           No articles found — try a different filter or search term.
         </div>
       ) : (
-        <div className="mt-6 space-y-6">
+        <div className="mt-2">
 
-          {/* Featured first article — only on sm+ */}
-          {showFeatured && (
-            <div className="hidden sm:block mb-2">
-              <PostCard post={featured} index={0} featured />
+          {/* Skeletons while loading */}
+          {loading && (
+            <div aria-hidden="true" className="flex flex-col">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ borderLeft: "3px solid transparent", paddingLeft: 14 }}>
+                  <div className="py-4 space-y-2" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <div className="skeleton h-2.5 w-32" />
+                    <div className="skeleton h-4 w-full" />
+                    <div className="skeleton h-4 w-4/5" />
+                    <div className="skeleton h-3 w-3/4" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Grid */}
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
-            aria-label="Articles"
-          >
-            {/* Skeletons while loading */}
-            {loading && Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} aria-hidden="true" className="card" style={{ minHeight: 200 }}>
-                <div className="px-5 pt-4 pb-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <div className="skeleton h-3 w-20" />
+          {/* Article list */}
+          {!loading && (
+            <div className="flex flex-col" aria-label="Articles">
+              {/* Featured first article — only on sm+ */}
+              {showFeatured && (
+                <div className="hidden sm:block">
+                  <PostCard post={featured} index={0} featured />
                 </div>
-                <div className="px-5 py-4 space-y-2">
-                  <div className="skeleton h-4 w-full" />
-                  <div className="skeleton h-4 w-5/6" />
-                  <div className="skeleton h-3 w-full mt-3" />
-                  <div className="skeleton h-3 w-4/5" />
-                </div>
-                <div className="px-5 pb-4 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                  <div className="skeleton h-5 w-20" />
-                </div>
-              </div>
-            ))}
+              )}
 
-            {/* On mobile show all cards; on sm+ skip first (shown as featured above) */}
-            {filtered.map((post, i) => (
-              <div key={post.id} className={showFeatured && i === 0 ? "sm:hidden" : ""}>
-                <PostCard post={post} index={i} />
-              </div>
-            ))}
-          </div>
+              {filtered.map((post, i) => (
+                <div key={post.id} className={showFeatured && i === 0 ? "sm:hidden" : ""}>
+                  <PostCard post={post} index={i} />
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Load more */}
           {hasMore && !search && activeKey === "all" && (
-            <div className="flex justify-center pt-6">
+            <div className="flex justify-center pt-8">
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
@@ -242,7 +243,7 @@ export function PostGrid({ onLoad }: Props) {
                     />
                     Loading…
                   </>
-                ) : "Load more articles"}
+                ) : "Load more"}
               </button>
             </div>
           )}

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Newsreader } from "next/font/google"
+import { Inter, Newsreader, IBM_Plex_Mono } from "next/font/google"
 import "./globals.css"
 
 const inter = Inter({
@@ -14,6 +14,13 @@ const newsreader = Newsreader({
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-newsreader",
+  display: "swap",
+})
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
   display: "swap",
 })
 
@@ -49,7 +56,7 @@ const themeScript = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${newsreader.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${newsreader.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
