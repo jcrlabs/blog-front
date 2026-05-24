@@ -98,27 +98,32 @@ export function PostGrid({ onLoad }: Props) {
         className="py-4"
         style={{ borderBottom: "1px solid var(--border)" }}
       >
-        {/* Filter tabs */}
-        <div
-          role="group"
-          aria-label="Filter articles by topic"
-          className="flex gap-5 overflow-x-auto scrollbar-none mb-3"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          {FILTERS.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setActiveKey(f.key)}
-              className={`filter-tab${activeKey === f.key ? " active" : ""}`}
-              aria-pressed={activeKey === f.key}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search + count row */}
+        {/* Search + filter row */}
         <div className="flex items-center gap-3">
+          {/* Filter dropdown */}
+          <div className="relative flex-shrink-0">
+            <label htmlFor="topic-filter" className="sr-only">Filter by topic</label>
+            <select
+              id="topic-filter"
+              value={activeKey}
+              onChange={e => setActiveKey(e.target.value)}
+              className="filter-select"
+              aria-label="Filter articles by topic"
+            >
+              {FILTERS.map(f => (
+                <option key={f.key} value={f.key}>{f.label}</option>
+              ))}
+            </select>
+            <svg
+              aria-hidden="true"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
+              style={{ color: "var(--text-3)" }}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+
           <div role="search" className="relative flex-1 max-w-sm">
             <label htmlFor={searchId} className="sr-only">Search articles</label>
             <svg
@@ -226,7 +231,7 @@ export function PostGrid({ onLoad }: Props) {
           )}
 
           {/* Load more */}
-          {hasMore && !search && activeKey === "all" && (
+          {hasMore && !search && (
             <div className="flex justify-center pt-8">
               <button
                 onClick={loadMore}
