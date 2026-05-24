@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   description: "Curated insights on LLMs, MCP, agents, RAG and AI architecture from Anthropic, OpenAI, Hugging Face and the best independent researchers.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "AI·feed", statusBarStyle: "black-translucent" },
-  icons: { apple: "/apple-touch-icon.png", icon: "/icon-512.svg" },
+  icons: { apple: "/apple-touch-icon.png", icon: "/icon-512.png" },
   openGraph: {
     title: "AI·feed — The AI Engineer Intelligence Feed",
     description: "Curated insights on LLMs, MCP, agents, RAG and AI architecture.",
@@ -54,11 +54,20 @@ const themeScript = `
 })();
 `
 
+const swScript = `
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js')
+  })
+}
+`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${newsreader.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: swScript }} />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

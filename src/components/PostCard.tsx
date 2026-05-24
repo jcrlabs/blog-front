@@ -58,6 +58,12 @@ function sourceColor(source?: string): string {
   return "#6366f1"
 }
 
+function readingTime(title: string, summary?: string): number {
+  if (!summary) return 0
+  const words = (title + " " + summary).trim().split(/\s+/).length
+  return Math.max(1, Math.round(words / 200))
+}
+
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://tech-blog-api.jcrlabs.net"
 
 async function toggleFavoriteApi(id: string): Promise<boolean> {
@@ -81,6 +87,7 @@ export function PostCard({ post, index, featured = false }: Props) {
   const isExternal = !post.content && !!post.sourceUrl
   const href = isExternal ? post.sourceUrl! : `/post/${post.slug}`
   const dateStr = formatDate(post.publishedAt ?? post.createdAt)
+  const mins = readingTime(post.title, post.summary ?? undefined)
 
   async function handleFavorite(e: React.MouseEvent) {
     e.preventDefault()
@@ -94,9 +101,9 @@ export function PostCard({ post, index, featured = false }: Props) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 6 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.025, 0.25), duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       aria-label={`${post.title}, from ${label}, ${dateStr}`}
     >
       <a
@@ -110,8 +117,36 @@ export function PostCard({ post, index, featured = false }: Props) {
         <div className="post-meta">
           {/* Mobile: 2-line layout */}
           <div className="post-meta-top sm:contents">
-            <span className="source-label" style={{ color }} aria-label={`Source: ${label}`}>
-              ● {label}
+            {/* Source pill badge */}
+            <span
+              className="source-label"
+              aria-label={`Source: ${label}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "2px 7px",
+                borderRadius: 99,
+                background: `${color}18`,
+                border: `1px solid ${color}30`,
+                color,
+                fontWeight: 500,
+                fontSize: 10,
+                letterSpacing: "0.04em",
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: "inline-block",
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  background: color,
+                  flexShrink: 0,
+                }}
+              />
+              {label}
             </span>
             <time
               dateTime={post.publishedAt ?? post.createdAt}
@@ -119,6 +154,14 @@ export function PostCard({ post, index, featured = false }: Props) {
             >
               {dateStr}
             </time>
+            {post.summary && mins > 0 && (
+              <span className="reading-time" aria-label={`${mins} minute read`}>
+                <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+                {mins}m
+              </span>
+            )}
           </div>
           <div className="post-meta-bottom sm:contents">
             <div className="tags-row" aria-label="Tags">

@@ -35,7 +35,21 @@ export function Nav() {
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" aria-label="AI·feed — home" className="group flex items-center gap-1.5">
+        <Link href="/" aria-label="AI·feed — home" className="group flex items-center gap-2">
+          {/* Red signal bar */}
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-block",
+              width: 3,
+              height: 14,
+              borderRadius: 2,
+              background: "var(--accent)",
+              flexShrink: 0,
+              transition: "opacity 0.15s",
+              boxShadow: "0 0 6px rgba(232,74,46,0.45)",
+            }}
+          />
           <span
             style={{
               fontFamily: "var(--font-newsreader), Georgia, serif",
