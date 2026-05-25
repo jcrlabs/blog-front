@@ -395,6 +395,186 @@ body::before {
   border-radius: 2px;
 }
 
+/* ─── App layout (2-col desktop) ────────────────────────────── */
+.app-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 0;
+  min-height: 100dvh;
+}
+@media (max-width: 1023px) {
+  .app-layout { grid-template-columns: 1fr; }
+}
+
+.sidebar {
+  width: 260px;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 40px;
+  height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+@media (max-width: 1023px) {
+  .sidebar { display: none; }
+}
+
+/* ─── Post cards (new grid design) ──────────────────────────── */
+.post-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  border-left: 3px solid var(--border);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  position: relative;
+}
+.post-card:hover {
+  border-left-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.post-card:hover .post-card-title {
+  color: var(--accent);
+}
+
+/* ─── Posts grid ─────────────────────────────────────────────── */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 767px) {
+  .posts-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Source pill ────────────────────────────────────────────── */
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-family: var(--font-mono), 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Sidebar nav filters ────────────────────────────────────── */
+.sidebar-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: var(--font-mono), 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  color: var(--text-3);
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-filter:hover {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.sidebar-filter.active {
+  background: rgba(232,74,46,0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+.sidebar-filter .count {
+  font-size: 10px;
+  color: var(--text-3);
+}
+.sidebar-filter.active .count {
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+/* ─── Post card title ────────────────────────────────────────── */
+.post-card-title {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  transition: color 0.15s;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Featured card ──────────────────────────────────────────── */
+.post-card-featured {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  border-left: 3px solid var(--border);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 12px;
+}
+@media (min-width: 768px) {
+  .post-card-featured {
+    flex-direction: row;
+    gap: 24px;
+  }
+}
+.post-card-featured:hover {
+  border-left-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+.post-card-featured:hover .post-card-title-featured {
+  color: var(--accent);
+}
+
+.post-card-title-featured {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  transition: color 0.15s;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .post-card-title-featured { font-size: 28px; }
+}
+
+/* ─── Nav ticker ─────────────────────────────────────────────── */
+.nav-ticker {
+  font-family: var(--font-mono), 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
 /* ─── iOS safe areas ─────────────────────────────────────────── */
 @supports (padding: max(0px)) {
   .safe-top    { padding-top:    max(16px, env(safe-area-inset-top)); }

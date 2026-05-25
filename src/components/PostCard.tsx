@@ -15,7 +15,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
-function sourceLabel(source?: string): string {
+export function sourceLabel(source?: string): string {
   if (!source) return "Unknown"
   const map: Record<string, string> = {
     "Anthropic Blog": "Anthropic",
@@ -40,7 +40,7 @@ function sourceLabel(source?: string): string {
   return source.split(" ")[0].slice(0, 14)
 }
 
-function sourceColor(source?: string): string {
+export function sourceColor(source?: string): string {
   if (!source) return "#6366f1"
   if (source.includes("Anthropic")) return "#d4893a"
   if (source.includes("OpenAI")) return "#10a37f"
@@ -99,6 +99,191 @@ export function PostCard({ post, index, featured = false }: Props) {
     setSaving(false)
   }
 
+  if (featured) {
+    return (
+      <motion.article
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        aria-label={`Featured: ${post.title}, from ${label}, ${dateStr}`}
+      >
+        <a
+          href={href}
+          target={isExternal ? "_blank" : "_self"}
+          rel={isExternal ? "noopener noreferrer" : undefined}
+          className="post-card-featured"
+          aria-label={isExternal ? `${post.title} — opens on ${label}` : post.title}
+        >
+          {/* Left: content (70%) */}
+          <div style={{ flex: "0 0 70%", minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Header row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span
+                className="source-pill"
+                aria-label={`Source: ${label}`}
+                style={{
+                  background: `${color}18`,
+                  border: `1px solid ${color}30`,
+                  color,
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: "inline-block",
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: color,
+                    flexShrink: 0,
+                  }}
+                />
+                {label}
+              </span>
+              <time
+                dateTime={post.publishedAt ?? post.createdAt}
+                style={{
+                  fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+                  fontSize: 10,
+                  color: "var(--text-3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {dateStr}
+              </time>
+              {mins > 0 && (
+                <span
+                  aria-label={`${mins} minute read`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+                    fontSize: 10,
+                    color: "var(--text-3)",
+                    letterSpacing: "0.03em",
+                  }}
+                >
+                  <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                  </svg>
+                  {mins}m
+                </span>
+              )}
+            </div>
+
+            {/* Title */}
+            <h2 className="post-card-title-featured">{post.title}</h2>
+
+            {/* Summary */}
+            {post.summary && (
+              <p
+                style={{
+                  fontFamily: "var(--font-inter), Inter, sans-serif",
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  color: "var(--text-2)",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  margin: 0,
+                }}
+              >
+                {post.summary}
+              </p>
+            )}
+
+            {/* Footer */}
+            <div
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 4 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }} aria-label="Tags">
+                {post.tagNames.slice(0, 5).map(tag => (
+                  <span
+                    key={tag}
+                    style={{
+                      fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+                      fontSize: 10,
+                      color: "var(--text-3)",
+                      textTransform: "lowercase",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <button
+                  onClick={handleFavorite}
+                  disabled={saving}
+                  aria-label={favorited ? `Remove "${post.title}" from saved` : `Save "${post.title}"`}
+                  aria-pressed={favorited}
+                  className="icon-btn"
+                  style={favorited ? { color: "#f59e0b" } : undefined}
+                >
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24"
+                    fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                  </svg>
+                </button>
+                {isExternal && (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open "${post.title}" on ${label} (opens in new tab)`}
+                    className="icon-btn"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <svg aria-hidden="true" width="14" height="14" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor" strokeWidth={1.75}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: gradient image (30%) — desktop only */}
+          <div
+            aria-hidden="true"
+            style={{
+              flex: "0 0 30%",
+              minHeight: 120,
+              borderRadius: 4,
+              background: `linear-gradient(135deg, ${color}22 0%, ${color}08 50%, transparent 100%)`,
+              border: `1px solid ${color}20`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-newsreader), Georgia, serif",
+                fontSize: 42,
+                fontWeight: 700,
+                color: `${color}30`,
+                letterSpacing: "-0.04em",
+                userSelect: "none",
+              }}
+            >
+              {label.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
+        </a>
+      </motion.article>
+    )
+  }
+
+  // Regular card
   return (
     <motion.article
       initial={{ opacity: 0, y: 8 }}
@@ -110,107 +295,146 @@ export function PostCard({ post, index, featured = false }: Props) {
         href={href}
         target={isExternal ? "_blank" : "_self"}
         rel={isExternal ? "noopener noreferrer" : undefined}
-        className={`post-item group${featured ? " featured" : ""}`}
+        className="post-card"
         aria-label={isExternal ? `${post.title} — opens on ${label}` : post.title}
+        style={{ borderLeftColor: "var(--border)" }}
       >
-        {/* ── Meta row ── */}
-        <div className="post-meta">
-          {/* Mobile: 2-line layout */}
-          <div className="post-meta-top sm:contents">
-            {/* Source pill badge */}
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, gap: 6 }}>
+          <span
+            className="source-pill"
+            aria-label={`Source: ${label}`}
+            style={{
+              background: `${color}18`,
+              border: `1px solid ${color}30`,
+              color,
+              flexShrink: 0,
+            }}
+          >
             <span
-              className="source-label"
-              aria-label={`Source: ${label}`}
+              aria-hidden="true"
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "2px 7px",
-                borderRadius: 99,
-                background: `${color}18`,
-                border: `1px solid ${color}30`,
-                color,
-                fontWeight: 500,
-                fontSize: 10,
-                letterSpacing: "0.04em",
+                display: "inline-block",
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: color,
+                flexShrink: 0,
               }}
-            >
+            />
+            {label}
+          </span>
+          <time
+            dateTime={post.publishedAt ?? post.createdAt}
+            style={{
+              fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+              fontSize: 10,
+              color: "var(--text-3)",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              flexShrink: 0,
+            }}
+          >
+            {dateStr}
+          </time>
+        </div>
+
+        {/* Title */}
+        <h2 className="post-card-title" style={{ marginBottom: 6 }}>{post.title}</h2>
+
+        {/* Summary */}
+        {post.summary && (
+          <p
+            style={{
+              fontFamily: "var(--font-inter), Inter, sans-serif",
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: "var(--text-2)",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              marginBottom: 10,
+            }}
+          >
+            {post.summary}
+          </p>
+        )}
+
+        {/* Footer */}
+        <div
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, flex: 1, minWidth: 0 }} aria-label="Tags">
+            {post.tagNames.slice(0, 3).map(tag => (
               <span
-                aria-hidden="true"
+                key={tag}
                 style={{
-                  display: "inline-block",
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: color,
-                  flexShrink: 0,
+                  fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+                  fontSize: 10,
+                  color: "var(--text-3)",
+                  textTransform: "lowercase",
+                  letterSpacing: "0.02em",
+                  whiteSpace: "nowrap",
                 }}
-              />
-              {label}
-            </span>
-            <time
-              dateTime={post.publishedAt ?? post.createdAt}
-              className="date"
-            >
-              {dateStr}
-            </time>
-            {post.summary && mins > 0 && (
-              <span className="reading-time" aria-label={`${mins} minute read`}>
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+            {mins > 0 && (
+              <span
+                aria-label={`${mins} minute read`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 3,
+                  fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
+                  fontSize: 10,
+                  color: "var(--text-3)",
+                  marginRight: 2,
+                }}
+              >
                 <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                 </svg>
                 {mins}m
               </span>
             )}
-          </div>
-          <div className="post-meta-bottom sm:contents">
-            <div className="tags-row" aria-label="Tags">
-              {post.tagNames.slice(0, featured ? 5 : 4).map(tag => (
-                <span key={tag} className="tag">#{tag}</span>
-              ))}
-            </div>
-            <div className="actions" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={handleFavorite}
-                disabled={saving}
-                aria-label={favorited ? `Remove "${post.title}" from saved` : `Save "${post.title}"`}
-                aria-pressed={favorited}
+            <button
+              onClick={handleFavorite}
+              disabled={saving}
+              aria-label={favorited ? `Remove "${post.title}" from saved` : `Save "${post.title}"`}
+              aria-pressed={favorited}
+              className="icon-btn"
+              style={favorited ? { color: "#f59e0b" } : undefined}
+            >
+              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24"
+                fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+              </svg>
+            </button>
+            {isExternal && (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open "${post.title}" on ${label} (opens in new tab)`}
                 className="icon-btn"
-                style={favorited ? { color: "#f59e0b" } : undefined}
+                onClick={e => e.stopPropagation()}
               >
-                <svg aria-hidden="true" className="w-3.5 h-3.5" viewBox="0 0 24 24"
-                  fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                <svg aria-hidden="true" width="13" height="13" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
-              </button>
-              {isExternal && (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Open "${post.title}" on ${label} (opens in new tab)`}
-                  className="icon-btn"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" strokeWidth={1.75}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                  </svg>
-                </a>
-              )}
-            </div>
+              </a>
+            )}
           </div>
         </div>
-
-        {/* ── Title ── */}
-        <h2 className="post-title">{post.title}</h2>
-
-        {/* ── Summary ── */}
-        {post.summary && (
-          <p className="post-summary">{post.summary}</p>
-        )}
       </a>
-      <hr className="post-separator" />
     </motion.article>
   )
 }

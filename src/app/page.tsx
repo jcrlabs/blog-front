@@ -4,7 +4,7 @@ import { HomeClient } from "@/components/HomeClient"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-animated">
+    <div style={{ minHeight: "100dvh", background: "var(--bg)" }}>
       <Nav />
       <HomeClient />
       <Footer />
