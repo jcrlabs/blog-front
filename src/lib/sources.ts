@@ -2,10 +2,10 @@ import type { SourceTier } from "./types"
 
 // Source tiers come from the API; this is the single place that maps them to UI labels/colors.
 export const TIERS: { key: SourceTier; label: string; hint: string; color: string }[] = [
-  { key: "LAB",       label: "Labs",      hint: "Official blogs from AI labs and platforms", color: "#d4893a" },
-  { key: "RESEARCH",  label: "Research",  hint: "Research groups and deep technical writing", color: "#4285f4" },
-  { key: "EXPERT",    label: "Experts",   hint: "Independent practitioners and newsletters",  color: "#34d399" },
-  { key: "COMMUNITY", label: "Community", hint: "dev.to, Medium and Hacker News",             color: "#08b6ae" },
+  { key: "LAB",       label: "Labs",      hint: "Official blogs from AI labs and platforms", color: "var(--tier-lab)" },
+  { key: "RESEARCH",  label: "Research",  hint: "Research groups and deep technical writing", color: "var(--tier-research)" },
+  { key: "EXPERT",    label: "Experts",   hint: "Independent practitioners and newsletters",  color: "var(--tier-expert)" },
+  { key: "COMMUNITY", label: "Community", hint: "dev.to, Medium and Hacker News",             color: "var(--tier-community)" },
 ]
 
 // Topic tags produced by the ingester; anything not listed here is not shown as a filter.
@@ -40,9 +40,12 @@ export function tierMeta(tier?: SourceTier | null) {
   return TIERS.find(t => t.key === tier)
 }
 
+// Tier color first so cards stay consistent; brand colors only when the tier is unknown (sidebar)
 export function sourceColor(source?: string, tier?: SourceTier | null): string {
+  const t = tierMeta(tier)
+  if (t) return t.color
   if (source && BRAND_COLORS[source]) return BRAND_COLORS[source]
-  return tierMeta(tier)?.color ?? "#6366f1"
+  return "var(--text-3)"
 }
 
 export function sourceLabel(source?: string): string {

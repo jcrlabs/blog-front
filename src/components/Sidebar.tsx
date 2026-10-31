@@ -1,23 +1,14 @@
 "use client"
 
 import type { FeedFilter, FeedStats } from "@/lib/types"
-import { TIERS, TOPICS, sourceColor } from "@/lib/sources"
-
-const LABEL_STYLE = {
-  fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-  fontSize: 10,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.08em",
-  color: "var(--text-3)",
-  marginBottom: 6,
-}
-
-const SECTION_STYLE = { marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid var(--border)" }
+import { TOPICS, sourceColor } from "@/lib/sources"
 
 export function formatRelative(iso?: string | null): string {
   if (!iso) return "—"
-  const hours = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000)
-  if (hours < 1) return "just now"
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (mins < 1) return "just now"
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours}h ago`
   return `${Math.floor(hours / 24)}d ago`
 }
@@ -29,93 +20,64 @@ interface Props {
 }
 
 export function Sidebar({ stats, filter, onFilterChange }: Props) {
-  const count = (rows: { key: string; count: number }[] | undefined, key: string) =>
-    rows?.find(r => r.key === key)?.count ?? 0
-  const topics = TOPICS.filter(t => count(stats?.tags, t.key) > 0)
-  const topSources = stats?.sources.slice(0, 8) ?? []
+  const tagCount = (key: string) => stats?.tags.find(r => r.key === key)?.count ?? 0
+  const topics = TOPICS.filter(t => tagCount(t.key) > 0).sort((a, b) => tagCount(b.key) - tagCount(a.key))
+  const topSources = stats?.sources.slice(0, 10) ?? []
+  const max = topSources[0]?.count ?? 1
 
   return (
-    <aside className="sidebar" aria-label="Feed navigation and filters">
-      {/* Sections: where the article comes from */}
-      <div style={SECTION_STYLE}>
-        <div style={LABEL_STYLE}>Sections</div>
-        <nav aria-label="Filter by source type">
-          <button
-            onClick={() => onFilterChange({ ...filter, tier: undefined })}
-            className={`sidebar-filter${!filter.tier ? " active" : ""}`}
-            aria-pressed={!filter.tier}
-          >
-            Everything
-            <span className="count" aria-hidden="true">{stats?.total ?? 0}</span>
-          </button>
-          {TIERS.map(t => (
-            <button
-              key={t.key}
-              onClick={() => onFilterChange({ ...filter, tier: t.key })}
-              className={`sidebar-filter${filter.tier === t.key ? " active" : ""}`}
-              aria-pressed={filter.tier === t.key}
-              title={t.hint}
-            >
-              {t.label}
-              <span className="count" aria-hidden="true">{count(stats?.tiers, t.key)}</span>
+    <aside className="sidebar" aria-label="Topics and sources">
+      <section>
+        <div className="side-label">
+          <span>Topics</span>
+          {filter.tag && (
+            <button className="mono" style={{ background: "none", border: 0, color: "var(--accent)", cursor: "pointer", fontSize: 10 }} onClick={() => onFilterChange({ ...filter, tag: undefined })}>
+              clear
             </button>
+          )}
+        </div>
+        <nav className="topic-list" aria-label="Filter by topic">
+          {topics.map(t => {
+            const active = filter.tag === t.key
+            return (
+              <button
+                key={t.key}
+                className={`topic${active ? " active" : ""}`}
+                onClick={() => onFilterChange({ ...filter, tag: active ? undefined : t.key })}
+                aria-pressed={active}
+              >
+                #{t.key} <b>{tagCount(t.key)}</b>
+              </button>
+            )
+          })}
+          {!stats && Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className="skeleton" style={{ width: 60 + (i % 3) * 14, height: 24 }} />
           ))}
         </nav>
-      </div>
+      </section>
 
-      {/* Topics: what the article is about */}
-      {topics.length > 0 && (
-        <div style={SECTION_STYLE}>
-          <div style={LABEL_STYLE}>Topics</div>
-          <nav aria-label="Filter by topic">
-            {topics.map(t => {
-              const active = filter.tag === t.key
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => onFilterChange({ ...filter, tag: active ? undefined : t.key })}
-                  className={`sidebar-filter${active ? " active" : ""}`}
-                  aria-pressed={active}
-                >
-                  {t.label}
-                  <span className="count" aria-hidden="true">{count(stats?.tags, t.key)}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-      )}
-
-      {/* Top sources over the whole retention window */}
-      {topSources.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ ...LABEL_STYLE, marginBottom: 10 }}>Top sources · 14 days</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {topSources.map(({ key, count: n }) => (
-              <div
-                key={key}
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 10px" }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span
-                    aria-hidden="true"
-                    style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: sourceColor(key), flexShrink: 0 }}
-                  />
-                  <span style={{ fontFamily: "var(--font-inter), Inter, sans-serif", fontSize: 12, color: "var(--text-2)" }}>
-                    {key}
-                  </span>
+      <section>
+        <div className="side-label"><span>Top sources</span><span>14d</span></div>
+        <div>
+          {topSources.map(({ key, count, tier }) => {
+            const color = sourceColor(key, tier)
+            return (
+              <div key={key} className="source-row">
+                <div className="source-row-name"><i style={{ background: color }} aria-hidden="true" /><span>{key}</span></div>
+                <span className="source-row-count">{count}</span>
+                <div className="source-row-bar" aria-hidden="true">
+                  <span style={{ width: `${(count / max) * 100}%`, background: color }} />
                 </div>
-                <span style={{ fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-3)" }}>
-                  {n}
-                </span>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
-      )}
+      </section>
 
-      <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid var(--border)", ...LABEL_STYLE }}>
-        Last article {formatRelative(stats?.updatedAt)}
+      <div className="side-foot">
+        <div>$ cron <span style={{ color: "var(--text-2)" }}>0 * * * *</span></div>
+        <div>$ retention <span style={{ color: "var(--text-2)" }}>14d</span></div>
+        <div>$ last_article <span style={{ color: "var(--accent)" }}>{formatRelative(stats?.updatedAt)}</span></div>
       </div>
     </aside>
   )

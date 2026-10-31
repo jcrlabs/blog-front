@@ -1,26 +1,16 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Newsreader, IBM_Plex_Mono } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({
+const geist = Geist({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
+  variable: "--font-geist",
   display: "swap",
 })
 
-const newsreader = Newsreader({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-newsreader",
-  display: "swap",
-})
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
+  variable: "--font-geist-mono",
   display: "swap",
 })
 
@@ -28,7 +18,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0f0d0b",
+  themeColor: "#07090c",
 }
 
 export const metadata: Metadata = {
@@ -64,7 +54,7 @@ if ('serviceWorker' in navigator) {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${newsreader.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: swScript }} />
@@ -74,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-title" content="AI·feed" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="min-h-dvh" style={{ fontFamily: "var(--font-inter), Inter, -apple-system, sans-serif" }}>
+      <body className="min-h-dvh">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         {children}
       </body>

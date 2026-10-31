@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useId } from "react"
-import { motion, useInView } from "framer-motion"
+import { useState, useEffect, type CSSProperties } from "react"
 import { PostCard } from "./PostCard"
 import { GET_POSTS } from "@/lib/queries"
 import { TIERS } from "@/lib/sources"
@@ -62,27 +61,14 @@ function groupByDay(posts: Post[]): { day: string; posts: Post[] }[] {
 interface Props {
   filter: FeedFilter
   onFilterChange: (f: FeedFilter) => void
+  onClear: () => void
 }
 
-export function PostGrid({ filter, onFilterChange }: Props) {
+export function PostGrid({ filter, onFilterChange, onClear }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [search, setSearch] = useState("")
-  const ref = useRef<HTMLDivElement>(null)
-  const visible = useInView(ref, { once: true, margin: "-40px" })
-  const searchId = useId()
-  const statusId = useId()
-
-  // Debounce the search box into the shared filter so the query runs server-side
-  useEffect(() => {
-    const t = setTimeout(() => {
-      const term = search.trim()
-      if ((filter.search ?? "") !== term) onFilterChange({ ...filter, search: term || undefined })
-    }, 350)
-    return () => clearTimeout(t)
-  }, [search, filter, onFilterChange])
 
   useEffect(() => {
     let cancelled = false
@@ -110,203 +96,77 @@ export function PostGrid({ filter, onFilterChange }: Props) {
   const featured = isFiltered ? undefined : posts.find(p => p.sourceTier === "LAB" || p.sourceTier === "RESEARCH")
   const rest = featured ? posts.filter(p => p.id !== featured.id) : posts
   const groups = groupByDay(rest)
-  const showFeatured = !loading && !!featured
 
   return (
-    <div ref={ref} style={{ padding: "0 0 80px" }}>
-
-      {/* Search toolbar */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={visible ? { opacity: 1 } : {}}
-        transition={{ duration: 0.3 }}
-        style={{
-          padding: "12px 20px",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div role="search" style={{ position: "relative", flex: 1, maxWidth: 400 }}>
-          <label htmlFor={searchId} className="sr-only">Search articles</label>
-          <svg
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: 13,
-              height: 13,
-              color: "var(--text-3)",
-              pointerEvents: "none",
-            }}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input
-            id={searchId}
-            type="search"
-            placeholder="Search articles…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="search-input"
-            aria-controls={statusId}
-            autoComplete="off"
-          />
-        </div>
-
-        {/* Section chips — mobile only, the sidebar handles this on desktop */}
-        <div className="mobile-tiers" role="group" aria-label="Filter by source type">
-          {[{ key: undefined, label: "All" }, ...TIERS].map(t => (
+    <div>
+      <div className="toolbar">
+        <div className="segmented" role="group" aria-label="Filter by source type">
+          {[{ key: undefined, label: "All", color: "var(--accent)" }, ...TIERS].map(t => (
             <button
               key={t.label}
+              className={filter.tier === t.key ? "active" : ""}
+              style={{ "--c": t.color } as CSSProperties}
               onClick={() => onFilterChange({ ...filter, tier: t.key })}
-              className={`mobile-tier${filter.tier === t.key ? " active" : ""}`}
               aria-pressed={filter.tier === t.key}
             >
-              {t.label}
+              <i aria-hidden="true" />{t.label}
             </button>
           ))}
         </div>
 
-        {/* Live count */}
-        <div
-          id={statusId}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          style={{
-            fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-            fontSize: 11,
-            color: "var(--text-3)",
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
-            flexShrink: 0,
-          }}
-        >
+        {(filter.tag || filter.search) && (
+          <button className="chip-clear" onClick={onClear} aria-label="Clear filters">
+            {filter.tag ? `#${filter.tag}` : `"${filter.search}"`} ✕
+          </button>
+        )}
+
+        <div className="toolbar-status" role="status" aria-live="polite">
           {loading ? (
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                aria-hidden="true"
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  border: "2px solid var(--accent)",
-                  borderTopColor: "transparent",
-                  display: "inline-block",
-                }}
-                className="animate-spin"
-              />
-              Loading…
-            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><span className="spinner" aria-hidden="true" />fetching…</span>
           ) : (
-            <span>
-              <span style={{ color: "var(--text-2)" }} className="tabular-nums">{posts.length}{hasMore ? "+" : ""}</span>
-              {" "}article{posts.length !== 1 ? "s" : ""}
-              {filter.search && (
-                <> · <span style={{ color: "var(--accent)" }}>&ldquo;{filter.search}&rdquo;</span></>
-              )}
-            </span>
+            <><strong>{posts.length}{hasMore ? "+" : ""}</strong> articles</>
           )}
         </div>
-      </motion.div>
+      </div>
 
-      {/* Content area */}
-      <div style={{ padding: "16px 20px" }}>
-        {!loading && posts.length === 0 ? (
-          <div
-            role="status"
-            style={{
-              textAlign: "center",
-              padding: "80px 0",
-              fontSize: 14,
-              color: "var(--text-3)",
-              fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-            }}
-          >
-            No articles found — try a different filter or search term.
+      <div className="feed">
+        {loading ? (
+          <div aria-hidden="true">
+            <div className="skeleton" style={{ height: 220, borderRadius: 16, margin: "20px 0 28px" }} />
+            <div className="posts-grid">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} className="card" style={{ minHeight: 168 }}>
+                  <div className="skeleton" style={{ height: 12, width: "45%", marginBottom: 14 }} />
+                  <div className="skeleton" style={{ height: 16, width: "95%", marginBottom: 8 }} />
+                  <div className="skeleton" style={{ height: 16, width: "70%", marginBottom: 14 }} />
+                  <div className="skeleton" style={{ height: 12, width: "85%" }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="empty" role="status">
+            <b>Nothing matches that.</b>
+            Try another topic or clear the search.
+            <div style={{ marginTop: 18 }}><button className="btn-ghost" onClick={onClear}>Reset filters</button></div>
           </div>
         ) : (
           <>
-            {/* Skeletons while loading */}
-            {loading && (
-              <div aria-hidden="true" className="posts-grid">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: "var(--surface)",
-                      border: "1px solid var(--border)",
-                      borderLeft: "3px solid var(--border)",
-                      borderRadius: 6,
-                      padding: 16,
-                    }}
-                  >
-                    <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                      <div className="skeleton" style={{ height: 18, width: 70, borderRadius: 99 }} />
-                      <div className="skeleton" style={{ height: 14, width: 50 }} />
-                    </div>
-                    <div className="skeleton" style={{ height: 17, width: "100%", marginBottom: 6 }} />
-                    <div className="skeleton" style={{ height: 17, width: "80%", marginBottom: 10 }} />
-                    <div className="skeleton" style={{ height: 13, width: "60%" }} />
-                    <div className="skeleton" style={{ height: 13, width: "40%", marginTop: 6 }} />
-                  </div>
-                ))}
-              </div>
-            )}
+            {featured && <PostCard post={featured} index={0} featured />}
 
-            {!loading && (
-              <div aria-label="Articles">
-                {/* Featured post */}
-                {showFeatured && featured && (
-                  <PostCard post={featured} index={0} featured />
-                )}
+            {groups.map(g => (
+              <section key={g.day} aria-label={g.day}>
+                <h2 className="day-heading">{g.day} <span>{g.posts.length} posts</span></h2>
+                <div className="posts-grid">
+                  {g.posts.map((post, i) => <PostCard key={post.id} post={post} index={i} />)}
+                </div>
+              </section>
+            ))}
 
-                {/* Remaining articles, grouped by publication day */}
-                {groups.map(g => (
-                  <section key={g.day} aria-label={g.day}>
-                    <h2 className="day-heading">{g.day}</h2>
-                    <div className="posts-grid">
-                      {g.posts.map((post, i) => (
-                        <PostCard key={post.id} post={post} index={i} />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            )}
-
-            {/* Load more */}
             {hasMore && (
-              <div style={{ display: "flex", justifyContent: "center", paddingTop: 32 }}>
-                <button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  aria-label={loadingMore ? "Loading more articles" : "Load more articles"}
-                  className="btn-outline"
-                >
-                  {loadingMore ? (
-                    <>
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: "50%",
-                          border: "2px solid var(--accent)",
-                          borderTopColor: "transparent",
-                          display: "inline-block",
-                        }}
-                        className="animate-spin"
-                      />
-                      Loading…
-                    </>
-                  ) : "Load more"}
+              <div style={{ display: "flex", justifyContent: "center", paddingTop: 36 }}>
+                <button onClick={loadMore} disabled={loadingMore} className="btn-ghost">
+                  {loadingMore ? <><span className="spinner" aria-hidden="true" />Loading…</> : "Load older articles"}
                 </button>
               </div>
             )}
