@@ -16,7 +16,7 @@ export interface Post {
   favorited: boolean
 }
 
-export interface Count { key: string; count: number }
+export interface Count { key: string; count: number; tier?: SourceTier | null }
 
 export interface FeedStats {
   total: number

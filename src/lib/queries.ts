@@ -24,7 +24,7 @@ export const GET_FEED_STATS = `
       updatedAt
       tiers { key count }
       tags { key count }
-      sources { key count }
+      sources { key count tier }
     }
   }
 `

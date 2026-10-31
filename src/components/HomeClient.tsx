@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { Nav } from "./Nav"
 import { Hero } from "./Hero"
 import { PostGrid } from "./PostGrid"
 import { Sidebar } from "./Sidebar"
@@ -26,18 +27,34 @@ async function fetchStats(): Promise<FeedStats | null> {
 export function HomeClient() {
   const [stats, setStats] = useState<FeedStats | null>(null)
   const [filter, setFilter] = useState<FeedFilter>({})
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     fetchStats().then(setStats)
   }, [])
 
+  // Debounce the search box into the filter so the query runs server-side
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const term = search.trim() || undefined
+      setFilter(f => (f.search === term ? f : { ...f, search: term }))
+    }, 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  const clearFilters = useCallback(() => {
+    setSearch("")
+    setFilter({})
+  }, [])
+
   return (
     <>
-      <Hero stats={stats} />
+      <Nav search={search} onSearch={setSearch} />
+      <Hero stats={stats} filter={filter} onFilterChange={setFilter} />
       <div className="app-layout">
         <Sidebar stats={stats} filter={filter} onFilterChange={setFilter} />
         <main id="main-content" tabIndex={-1} style={{ minWidth: 0 }}>
-          <PostGrid filter={filter} onFilterChange={setFilter} />
+          <PostGrid filter={filter} onFilterChange={setFilter} onClear={clearFilters} />
         </main>
       </div>
     </>

@@ -1,304 +1,102 @@
 "use client"
 
+import type { CSSProperties, MouseEvent } from "react"
 import { motion } from "framer-motion"
 import type { Post } from "@/lib/types"
 import { sourceColor, sourceLabel, tierMeta } from "@/lib/sources"
 
-function formatDate(iso: string): string {
+export function formatDate(iso: string): string {
   const d = new Date(iso)
-  const now = new Date()
-  const hours = Math.floor((now.getTime() - d.getTime()) / 3600000)
-  if (hours < 1) return "just now"
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000)
+  if (mins < 60) return `${Math.max(mins, 1)}m ago`
+  const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours}h ago`
   const days = Math.floor(hours / 24)
   if (days === 1) return "yesterday"
   if (days < 7) return `${days}d ago`
-  if (days < 30) return `${Math.floor(days / 7)}w ago`
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
+// Feeds the radial hover glow in .card::after
+function trackPointer(e: MouseEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`)
+}
+
+function Arrow() {
+  return (
+    <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M8 7h9v9" />
+    </svg>
+  )
 }
 
 interface Props { post: Post; index: number; featured?: boolean }
 
 export function PostCard({ post, index, featured = false }: Props) {
   const color = sourceColor(post.source, post.sourceTier)
-  const tier = tierMeta(post.sourceTier)
   const label = sourceLabel(post.source)
+  const tier = tierMeta(post.sourceTier)
   const isExternal = !post.content && !!post.sourceUrl
   const href = isExternal ? post.sourceUrl! : `/post/${post.slug}`
-  const dateStr = formatDate(post.publishedAt ?? post.createdAt)
+  const published = post.publishedAt ?? post.createdAt
+  const dateStr = formatDate(published)
+  const linkProps = isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {}
+  const style = { "--c": color } as CSSProperties
 
   if (featured) {
+    let host = ""
+    try { host = post.sourceUrl ? new URL(post.sourceUrl).hostname.replace(/^www\./, "") : "" } catch { /* ignore */ }
     return (
-      <motion.article
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        aria-label={`Featured: ${post.title}, from ${label}, ${dateStr}`}
-      >
-        <a
-          href={href}
-          target={isExternal ? "_blank" : "_self"}
-          rel={isExternal ? "noopener noreferrer" : undefined}
-          className="post-card-featured"
-          aria-label={isExternal ? `${post.title} — opens on ${label}` : post.title}
-        >
-          {/* Left: content (70%) */}
-          <div style={{ flex: "0 0 70%", minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Header row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span
-                className="source-pill"
-                aria-label={`Source: ${label}`}
-                style={{
-                  background: `${color}18`,
-                  border: `1px solid ${color}30`,
-                  color,
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: "inline-block",
-                    width: 5,
-                    height: 5,
-                    borderRadius: "50%",
-                    background: color,
-                    flexShrink: 0,
-                  }}
-                />
-                {label}
-              </span>
-              <time
-                dateTime={post.publishedAt ?? post.createdAt}
-                style={{
-                  fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-                  fontSize: 10,
-                  color: "var(--text-3)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                {tier ? `${tier.label} · ` : ""}{dateStr}
-              </time>
-            </div>
-
-            {/* Title */}
-            <h2 className="post-card-title-featured">{post.title}</h2>
-
-            {/* Summary */}
-            {post.summary && (
-              <p
-                style={{
-                  fontFamily: "var(--font-inter), Inter, sans-serif",
-                  fontSize: 14,
-                  lineHeight: 1.65,
-                  color: "var(--text-2)",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                  margin: 0,
-                }}
-              >
-                {post.summary}
-              </p>
-            )}
-
-            {/* Footer */}
-            <div
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 4 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }} aria-label="Tags">
-                {post.tagNames.slice(0, 5).map(tag => (
-                  <span
-                    key={tag}
-                    style={{
-                      fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-                      fontSize: 10,
-                      color: "var(--text-3)",
-                      textTransform: "lowercase",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {isExternal && (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Open "${post.title}" on ${label} (opens in new tab)`}
-                    className="icon-btn"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <svg aria-hidden="true" width="14" height="14" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" strokeWidth={1.75}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                  </a>
-                )}
-              </div>
-            </div>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
+        <a href={href} {...linkProps} className="featured" style={style} aria-label={`Featured: ${post.title}, from ${label}`}>
+          <div style={{ minWidth: 0 }}>
+            <span className="featured-label"><span className="pulse-dot" style={{ background: color }} aria-hidden="true" />Top story · {label}</span>
+            <h2 className="featured-title">{post.title}</h2>
+            {post.summary && <p className="featured-summary">{post.summary}</p>}
+            <span className="featured-cta">Read on {host || label} <Arrow /></span>
           </div>
-
-          {/* Right: gradient image (30%) — desktop only */}
-          <div
-            aria-hidden="true"
-            style={{
-              flex: "0 0 30%",
-              minHeight: 120,
-              borderRadius: 4,
-              background: `linear-gradient(135deg, ${color}22 0%, ${color}08 50%, transparent 100%)`,
-              border: `1px solid ${color}20`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              flexShrink: 0,
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-newsreader), Georgia, serif",
-                fontSize: 42,
-                fontWeight: 700,
-                color: `${color}30`,
-                letterSpacing: "-0.04em",
-                userSelect: "none",
-              }}
-            >
-              {label.slice(0, 2).toUpperCase()}
-            </span>
+          <div className="terminal" aria-hidden="true">
+            <div className="terminal-bar"><i /><i /><i /><span>~/feed/top-story.json</span></div>
+            <div className="terminal-body">
+              <div><span className="k">{"{"}</span></div>
+              <div>&nbsp;&nbsp;<span className="k">&quot;source&quot;:</span> <span className="s">&quot;{label}&quot;</span>,</div>
+              <div>&nbsp;&nbsp;<span className="k">&quot;tier&quot;:</span> <span className="s">&quot;{tier?.label.toLowerCase() ?? "unknown"}&quot;</span>,</div>
+              <div>&nbsp;&nbsp;<span className="k">&quot;published&quot;:</span> <span className="v">&quot;{dateStr}&quot;</span>,</div>
+              {post.tagNames.length > 0 && (
+                <div>&nbsp;&nbsp;<span className="k">&quot;tags&quot;:</span> <span className="v">[{post.tagNames.slice(0, 3).map(t => `"${t}"`).join(", ")}]</span>,</div>
+              )}
+              <div>&nbsp;&nbsp;<span className="k">&quot;host&quot;:</span> <span className="v">&quot;{host}&quot;</span></div>
+              <div><span className="k">{"}"}</span> <span className="cursor" /></div>
+            </div>
           </div>
         </a>
-      </motion.article>
+      </motion.div>
     )
   }
 
-  // Regular card
   return (
-    <motion.article
+    <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      aria-label={`${post.title}, from ${label}, ${dateStr}`}
+      transition={{ delay: Math.min(index * 0.025, 0.25), duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
-      <a
-        href={href}
-        target={isExternal ? "_blank" : "_self"}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        className="post-card"
-        aria-label={isExternal ? `${post.title} — opens on ${label}` : post.title}
-        style={{ borderLeftColor: "var(--border)" }}
-      >
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, gap: 6 }}>
-          <span
-            className="source-pill"
-            aria-label={`Source: ${label}`}
-            style={{
-              background: `${color}18`,
-              border: `1px solid ${color}30`,
-              color,
-              flexShrink: 0,
-            }}
-          >
-            <span
-              aria-hidden="true"
-              style={{
-                display: "inline-block",
-                width: 5,
-                height: 5,
-                borderRadius: "50%",
-                background: color,
-                flexShrink: 0,
-              }}
-            />
-            {label}
-          </span>
-          <time
-            dateTime={post.publishedAt ?? post.createdAt}
-            style={{
-              fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-              fontSize: 10,
-              color: "var(--text-3)",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              flexShrink: 0,
-            }}
-          >
-            {tier ? `${tier.label} · ` : ""}{dateStr}
-          </time>
+      <a href={href} {...linkProps} className="card" style={style} onMouseMove={trackPointer} aria-label={`${post.title}, from ${label}, ${dateStr}`}>
+        <div className="card-meta">
+          <span className="card-source"><i aria-hidden="true" /><span>{label}</span></span>
+          {tier && <span className="card-tier">{tier.label}</span>}
+          <time className="card-time" dateTime={published}>{dateStr}</time>
         </div>
-
-        {/* Title */}
-        <h2 className="post-card-title" style={{ marginBottom: 6 }}>{post.title}</h2>
-
-        {/* Summary */}
-        {post.summary && (
-          <p
-            style={{
-              fontFamily: "var(--font-inter), Inter, sans-serif",
-              fontSize: 13,
-              lineHeight: 1.6,
-              color: "var(--text-2)",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              marginBottom: 10,
-            }}
-          >
-            {post.summary}
-          </p>
-        )}
-
-        {/* Footer */}
-        <div
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}
-          onClick={e => e.stopPropagation()}
-        >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, flex: 1, minWidth: 0 }} aria-label="Tags">
-            {post.tagNames.slice(0, 3).map(tag => (
-              <span
-                key={tag}
-                style={{
-                  fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
-                  fontSize: 10,
-                  color: "var(--text-3)",
-                  textTransform: "lowercase",
-                  letterSpacing: "0.02em",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                #{tag}
-              </span>
-            ))}
+        <h3 className="card-title">{post.title}</h3>
+        {post.summary && <p className="card-summary">{post.summary}</p>}
+        <div className="card-foot">
+          <div className="tags" aria-label="Tags">
+            {post.tagNames.slice(0, 3).map(tag => <span key={tag} className="tag">#{tag}</span>)}
           </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-            {isExternal && (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Open "${post.title}" on ${label} (opens in new tab)`}
-                className="icon-btn"
-                onClick={e => e.stopPropagation()}
-              >
-                <svg aria-hidden="true" width="13" height="13" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                </svg>
-              </a>
-            )}
-          </div>
+          <span className="card-arrow" aria-hidden="true"><Arrow /></span>
         </div>
       </a>
-    </motion.article>
+    </motion.div>
   )
 }
