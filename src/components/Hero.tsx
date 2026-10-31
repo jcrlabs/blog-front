@@ -1,10 +1,13 @@
 "use client"
 
-// Hero is now minimal — the sidebar carries feed stats on desktop.
-// On mobile it renders a compact banner with live badge + tagline.
-interface Props { postCount: number }
+import type { FeedStats } from "@/lib/types"
+import { formatRelative } from "./Sidebar"
 
-export function Hero({ postCount }: Props) {
+// Compact banner: what this site is, how fresh it is and how much it holds.
+interface Props { stats: FeedStats | null }
+
+export function Hero({ stats }: Props) {
+  const postCount = stats?.total ?? 0
   return (
     <header
       aria-label="Feed headline"
@@ -18,7 +21,7 @@ export function Hero({ postCount }: Props) {
         {/* Live badge */}
         <div
           role="status"
-          aria-label="Feed is live, updated every 6 hours"
+          aria-label="Feed refreshes every hour"
           style={{ display: "flex", alignItems: "center", gap: 6 }}
         >
           <span
@@ -44,7 +47,7 @@ export function Hero({ postCount }: Props) {
               fontWeight: 500,
             }}
           >
-            Live
+            {stats?.updatedAt ? `Updated ${formatRelative(stats.updatedAt)}` : "Hourly"}
           </span>
         </div>
 
@@ -60,15 +63,15 @@ export function Hero({ postCount }: Props) {
             margin: 0,
           }}
         >
-          The AI Engineer{" "}
-          <em style={{ fontStyle: "italic", color: "var(--accent)" }}>Intelligence Feed</em>
+          AI engineering news,{" "}
+          <em style={{ fontStyle: "italic", color: "var(--accent)" }}>from the source</em>
         </h1>
 
         {postCount > 0 && (
           <>
             <span aria-hidden="true" style={{ color: "var(--border-2)", fontSize: 12 }}>·</span>
             <span
-              aria-label={`${postCount.toLocaleString()} articles loaded`}
+              aria-label={`${postCount.toLocaleString()} articles from the last 14 days`}
               style={{
                 fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
                 fontSize: 10,
@@ -77,7 +80,7 @@ export function Hero({ postCount }: Props) {
                 color: "var(--text-3)",
               }}
             >
-              {postCount.toLocaleString()} articles
+              {postCount.toLocaleString()} articles · last 14 days
             </span>
           </>
         )}

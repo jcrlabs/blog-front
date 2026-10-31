@@ -9,9 +9,22 @@ export const GET_POSTS = `
       publishedAt
       sourceUrl
       source
+      sourceTier
       tagNames
       createdAt
       favorited
+    }
+  }
+`
+
+export const GET_FEED_STATS = `
+  query FeedStats {
+    feedStats {
+      total
+      updatedAt
+      tiers { key count }
+      tags { key count }
+      sources { key count }
     }
   }
 `
@@ -37,6 +50,7 @@ export const GET_POST = `
       publishedAt
       sourceUrl
       source
+      sourceTier
       tagNames
       createdAt
     }

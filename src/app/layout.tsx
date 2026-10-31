@@ -32,14 +32,14 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "AI·feed — The AI Engineer Intelligence Feed",
-  description: "Curated insights on LLMs, MCP, agents, RAG and AI architecture from Anthropic, OpenAI, Hugging Face and the best independent researchers.",
+  title: "AI·feed — AI engineering news, from the source",
+  description: "AI engineering news aggregated hourly from AI labs, research groups, independent experts and the community — with real publication dates and topic filters.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "AI·feed", statusBarStyle: "black-translucent" },
   icons: { apple: "/apple-touch-icon.png", icon: "/icon-512.png" },
   openGraph: {
-    title: "AI·feed — The AI Engineer Intelligence Feed",
-    description: "Curated insights on LLMs, MCP, agents, RAG and AI architecture.",
+    title: "AI·feed — AI engineering news, from the source",
+    description: "AI engineering news from labs, researchers, experts and the community.",
     type: "website",
   },
 }

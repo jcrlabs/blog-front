@@ -14,12 +14,12 @@ export function Footer() {
             AI
           </span>
           <span className="text-xs" style={{ color: "var(--text-3)" }}>
-            Curated AI/LLM/MCP intelligence · Updated every 6h
+            AI engineering news from labs, researchers and the community · refreshed hourly
           </span>
         </div>
         <nav aria-label="Footer links">
           <ul className="flex items-center gap-5 text-xs list-none" style={{ color: "var(--text-3)" }}>
-            <li><a href="/rss.xml" aria-label="RSS feed" className="transition-colors hover:text-[var(--accent)]" style={{ color: "inherit" }}>RSS</a></li>
+            <li><a href="https://tech-blog-api.jcrlabs.net/api/rss.xml" aria-label="RSS feed" className="transition-colors hover:text-[var(--accent)]" style={{ color: "inherit" }}>RSS</a></li>
             <li><a href="https://github.com/jcrlabs" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in new tab)" className="transition-colors hover:text-[var(--text-2)]" style={{ color: "inherit" }}>GitHub</a></li>
             <li><a href="https://home.jcrlabs.net" className="transition-colors hover:text-[var(--text-2)]" style={{ color: "inherit" }}>Portfolio</a></li>
           </ul>
