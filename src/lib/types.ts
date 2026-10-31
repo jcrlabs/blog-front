@@ -1,3 +1,5 @@
+export type SourceTier = "LAB" | "RESEARCH" | "EXPERT" | "COMMUNITY"
+
 export interface Post {
   id: string
   title: string
@@ -8,9 +10,26 @@ export interface Post {
   publishedAt?: string
   sourceUrl?: string
   source?: string
+  sourceTier?: SourceTier | null
   tagNames: string[]
   createdAt: string
   favorited: boolean
+}
+
+export interface Count { key: string; count: number }
+
+export interface FeedStats {
+  total: number
+  updatedAt?: string | null
+  tiers: Count[]
+  tags: Count[]
+  sources: Count[]
+}
+
+export interface FeedFilter {
+  tier?: SourceTier
+  tag?: string
+  search?: string
 }
 
 export interface Category {

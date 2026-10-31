@@ -4,107 +4,113 @@ import { useState, useEffect, useRef, useId } from "react"
 import { motion, useInView } from "framer-motion"
 import { PostCard } from "./PostCard"
 import { GET_POSTS } from "@/lib/queries"
-import type { Post } from "@/lib/types"
+import { TIERS } from "@/lib/sources"
+import type { FeedFilter, Post } from "@/lib/types"
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://tech-blog-api.jcrlabs.net"
 const PAGE_SIZE = 24
 
-async function fetchPosts(after?: string): Promise<{ posts: Post[]; hasMore: boolean; cursor?: string }> {
+// Cursor matches the API sort order: base64("<publishedAt>|<id>")
+function cursorFor(post?: Post): string | undefined {
+  if (!post) return undefined
+  return btoa(`${post.publishedAt ?? post.createdAt}|${post.id}`)
+}
+
+async function fetchPosts(filter: FeedFilter, after?: string): Promise<{ posts: Post[]; hasMore: boolean }> {
   try {
     const res = await fetch(`${API}/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: GET_POSTS,
-        variables: { pagination: { first: PAGE_SIZE + 1, ...(after ? { after } : {}) } },
+        variables: {
+          filter: { tier: filter.tier, tag: filter.tag, search: filter.search || undefined },
+          pagination: { first: PAGE_SIZE + 1, ...(after ? { after } : {}) },
+        },
       }),
     })
     const { data } = await res.json()
     const all: Post[] = data?.posts ?? []
     const hasMore = all.length > PAGE_SIZE
-    const posts = hasMore ? all.slice(0, PAGE_SIZE) : all
-    const lastId = posts[posts.length - 1]?.id
-    const cursor = lastId ? Buffer.from(lastId).toString("base64") : undefined
-    return { posts, hasMore, cursor }
+    return { posts: hasMore ? all.slice(0, PAGE_SIZE) : all, hasMore }
   } catch {
     return { posts: [], hasMore: false }
   }
 }
 
-const RESEARCH_SOURCES = [
-  "Anthropic Blog", "OpenAI Blog", "Google DeepMind",
-  "Hugging Face Blog", "Sebastian Raschka", "Chip Huyen", "The Batch",
-]
-
-const FILTERS = [
-  { key: "all",          label: "All",          match: (_s: string, _t: string[]) => true },
-  { key: "llm",          label: "LLMs",         match: (_s: string, t: string[]) => t.some(x => ["llm","openai","anthropic","gemini","mistral","open-source"].includes(x)) },
-  { key: "mcp",          label: "MCP",          match: (_s: string, t: string[]) => t.includes("mcp") },
-  { key: "agents",       label: "Agents",       match: (_s: string, t: string[]) => t.includes("agents") },
-  { key: "rag",          label: "RAG",          match: (_s: string, t: string[]) => t.includes("rag") || t.includes("vector-db") },
-  { key: "fine-tuning",  label: "Fine-tuning",  match: (_s: string, t: string[]) => t.includes("fine-tuning") },
-  { key: "architecture", label: "Architecture", match: (_s: string, t: string[]) => t.includes("architecture") || t.includes("mlops") },
-  { key: "prompting",    label: "Prompting",    match: (_s: string, t: string[]) => t.includes("prompting") },
-  { key: "research",     label: "Research",     match: (s: string, _t: string[]) => RESEARCH_SOURCES.includes(s) },
-]
-
-interface Props {
-  onLoad?: (count: number) => void
-  onPostsLoaded?: (posts: Post[]) => void
-  activeFilter?: string
-  onFilterChange?: (key: string) => void
+function dayLabel(iso: string): string {
+  const d = new Date(iso)
+  const today = new Date()
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const diff = Math.round((startOf(today) - startOf(d)) / 86400000)
+  if (diff === 0) return "Today"
+  if (diff === 1) return "Yesterday"
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
 }
 
-export function PostGrid({ onLoad, onPostsLoaded, activeFilter: externalFilter, onFilterChange }: Props) {
+function groupByDay(posts: Post[]): { day: string; posts: Post[] }[] {
+  const groups: { day: string; posts: Post[] }[] = []
+  for (const p of posts) {
+    const day = dayLabel(p.publishedAt ?? p.createdAt)
+    const last = groups[groups.length - 1]
+    if (last?.day === day) last.posts.push(p)
+    else groups.push({ day, posts: [p] })
+  }
+  return groups
+}
+
+interface Props {
+  filter: FeedFilter
+  onFilterChange: (f: FeedFilter) => void
+}
+
+export function PostGrid({ filter, onFilterChange }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [cursor, setCursor] = useState<string | undefined>()
-  const [internalFilter, setInternalFilter] = useState("all")
   const [search, setSearch] = useState("")
   const ref = useRef<HTMLDivElement>(null)
   const visible = useInView(ref, { once: true, margin: "-40px" })
   const searchId = useId()
   const statusId = useId()
 
-  // Use external filter if provided (sidebar-controlled), else internal
-  const activeKey = externalFilter ?? internalFilter
-  function setActiveKey(key: string) {
-    if (onFilterChange) onFilterChange(key)
-    else setInternalFilter(key)
-  }
+  // Debounce the search box into the shared filter so the query runs server-side
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const term = search.trim()
+      if ((filter.search ?? "") !== term) onFilterChange({ ...filter, search: term || undefined })
+    }, 350)
+    return () => clearTimeout(t)
+  }, [search, filter, onFilterChange])
 
   useEffect(() => {
-    fetchPosts().then(({ posts: p, hasMore: h, cursor: c }) => {
+    let cancelled = false
+    setLoading(true)
+    fetchPosts(filter).then(({ posts: p, hasMore: h }) => {
+      if (cancelled) return
       setPosts(p)
       setHasMore(h)
-      setCursor(c)
       setLoading(false)
-      onLoad?.(p.length)
-      onPostsLoaded?.(p)
     })
-  }, [onLoad, onPostsLoaded])
+    return () => { cancelled = true }
+  }, [filter])
 
   async function loadMore() {
-    if (!cursor || loadingMore) return
+    if (loadingMore) return
     setLoadingMore(true)
-    const { posts: more, hasMore: h, cursor: c } = await fetchPosts(cursor)
+    const { posts: more, hasMore: h } = await fetchPosts(filter, cursorFor(posts[posts.length - 1]))
     setPosts(prev => [...prev, ...more])
     setHasMore(h)
-    setCursor(c)
     setLoadingMore(false)
   }
 
-  const activeFilter = FILTERS.find(f => f.key === activeKey) ?? FILTERS[0]
-  const filtered = posts.filter(p => {
-    if (!activeFilter.match(p.source ?? "", p.tagNames ?? [])) return false
-    if (search && !p.title.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
-
-  const [featured, ...rest] = filtered
-  const showFeatured = !search && activeKey === "all" && !loading && !!featured
+  const isFiltered = !!(filter.tier || filter.tag || filter.search)
+  // Featured slot goes to the freshest post from a lab or researcher, never a community repost
+  const featured = isFiltered ? undefined : posts.find(p => p.sourceTier === "LAB" || p.sourceTier === "RESEARCH")
+  const rest = featured ? posts.filter(p => p.id !== featured.id) : posts
+  const groups = groupByDay(rest)
+  const showFeatured = !loading && !!featured
 
   return (
     <div ref={ref} style={{ padding: "0 0 80px" }}>
@@ -119,6 +125,7 @@ export function PostGrid({ onLoad, onPostsLoaded, activeFilter: externalFilter, 
           borderBottom: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",
+          flexWrap: "wrap",
           gap: 12,
         }}
       >
@@ -150,6 +157,20 @@ export function PostGrid({ onLoad, onPostsLoaded, activeFilter: externalFilter, 
             aria-controls={statusId}
             autoComplete="off"
           />
+        </div>
+
+        {/* Section chips — mobile only, the sidebar handles this on desktop */}
+        <div className="mobile-tiers" role="group" aria-label="Filter by source type">
+          {[{ key: undefined, label: "All" }, ...TIERS].map(t => (
+            <button
+              key={t.label}
+              onClick={() => onFilterChange({ ...filter, tier: t.key })}
+              className={`mobile-tier${filter.tier === t.key ? " active" : ""}`}
+              aria-pressed={filter.tier === t.key}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* Live count */}
@@ -185,10 +206,10 @@ export function PostGrid({ onLoad, onPostsLoaded, activeFilter: externalFilter, 
             </span>
           ) : (
             <span>
-              <span style={{ color: "var(--text-2)" }} className="tabular-nums">{filtered.length}</span>
-              {" "}art{filtered.length !== 1 ? "s" : ""}
-              {search && (
-                <> · <span style={{ color: "var(--accent)" }}>&ldquo;{search}&rdquo;</span></>
+              <span style={{ color: "var(--text-2)" }} className="tabular-nums">{posts.length}{hasMore ? "+" : ""}</span>
+              {" "}article{posts.length !== 1 ? "s" : ""}
+              {filter.search && (
+                <> · <span style={{ color: "var(--accent)" }}>&ldquo;{filter.search}&rdquo;</span></>
               )}
             </span>
           )}
@@ -197,7 +218,7 @@ export function PostGrid({ onLoad, onPostsLoaded, activeFilter: externalFilter, 
 
       {/* Content area */}
       <div style={{ padding: "16px 20px" }}>
-        {!loading && filtered.length === 0 ? (
+        {!loading && posts.length === 0 ? (
           <div
             role="status"
             style={{
@@ -242,21 +263,26 @@ export function PostGrid({ onLoad, onPostsLoaded, activeFilter: externalFilter, 
             {!loading && (
               <div aria-label="Articles">
                 {/* Featured post */}
-                {showFeatured && (
+                {showFeatured && featured && (
                   <PostCard post={featured} index={0} featured />
                 )}
 
-                {/* Grid of remaining articles */}
-                <div className="posts-grid">
-                  {(showFeatured ? rest : filtered).map((post, i) => (
-                    <PostCard key={post.id} post={post} index={showFeatured ? i + 1 : i} />
-                  ))}
-                </div>
+                {/* Remaining articles, grouped by publication day */}
+                {groups.map(g => (
+                  <section key={g.day} aria-label={g.day}>
+                    <h2 className="day-heading">{g.day}</h2>
+                    <div className="posts-grid">
+                      {g.posts.map((post, i) => (
+                        <PostCard key={post.id} post={post} index={i} />
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
             )}
 
             {/* Load more */}
-            {hasMore && !search && (
+            {hasMore && (
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 32 }}>
                 <button
                   onClick={loadMore}

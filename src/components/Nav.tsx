@@ -33,7 +33,7 @@ export function Nav({ postCount, lastUpdated }: Props) {
       else if (hours < 24) parts.push(`updated ${hours}h ago`)
       else parts.push(`updated ${Math.floor(hours / 24)}d ago`)
     } else {
-      parts.push("updated every 6h")
+      parts.push("refreshed hourly")
     }
     return parts.join(" · ")
   }
@@ -130,8 +130,8 @@ export function Nav({ postCount, lastUpdated }: Props) {
         {/* Right side */}
         <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
           {/* RSS — desktop only */}
-          <Link
-            href="/rss.xml"
+          <a
+            href="https://tech-blog-api.jcrlabs.net/api/rss.xml"
             aria-label="RSS feed"
             className="hidden lg:flex"
             style={{
@@ -162,7 +162,7 @@ export function Nav({ postCount, lastUpdated }: Props) {
               <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20C4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
             </svg>
             RSS
-          </Link>
+          </a>
 
           {/* GitHub — desktop only */}
           <a
